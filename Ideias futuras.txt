@@ -1,0 +1,34 @@
+WEB GERAL
+1- utilizar datatables.js para tabelas interativas em relatórios e listagens ou Chart.js para gráficos
+2- Trocar os botões de ação para imagens
+
+FUNCIONÁRIOS
+1- Implementar controle de entrada e saída de funcionários
+2- criar tabela usuários -> parar de usar tabela funcionários para login
+3- Método de pesquisar digitando o funcionário
+
+CLIENTE
+1- Método de pesquisar digitando o funcionário
+
+ESTOQUE
+1- (WEB) passar como parâmetro o id do produto, fazer aparecer automaticamente o valor e o nome
+2- (WEB) fazer filtro no index e no histório
+3- (WEB) sinalizar no Index os produtos que estão igual ou abaixo do mínimo
+
+RELATÓRIOS
+
+PRODUTO
+1- unidades
+
+
+
+
+CATEGORIAS DE MEDICAMENTOS
+'Medicamento Isento de Prescrição',
+'Amarela',
+'Amarela e Vermelha s/ Retenção de Prescrição',
+'Amarela e Vermelha c/ Retenção de Prescrição',
+'Amarela e Preta',
+'Vermelha s/ Retenção de Prescrição',
+'Vermelha c/ Retenção de Prescrição',
+'Preta'
