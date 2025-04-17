@@ -1,7 +1,7 @@
 <?php
 
 //$senha = $_GET["psw"];
-$senha = "senha456";
+$senha = "admin";
 
 $passHash = password_hash($senha, PASSWORD_DEFAULT);
 

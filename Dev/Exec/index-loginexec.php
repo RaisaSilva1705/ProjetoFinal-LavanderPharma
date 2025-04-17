@@ -12,40 +12,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die("Erro na conexão com o banco de dados: " . $conn->connect_error);
     }
 
-    $email = $_POST["email"];
+    $user = $_POST["user"];
     $password = $_POST["password"];
 
-    $stmt = $conn->prepare("SELECT ID_Funcionario, Email, Senha, Nome, ID_Cargo
-                              FROM FUNCIONARIOS
-                              WHERE Email = ?");
-    $stmt->bind_param("s", $email);
+    $stmt = $conn->prepare("SELECT U.ID_Usuario,
+                                   U.ID_Funcionario,
+                                   U.Senha,
+                                   U.Status,
+                                   F.ID_Cargo,
+                                   F.Nome
+                            FROM USUARIOS U LEFT JOIN FUNCIONARIOS F
+                            ON U.ID_Funcionario = F.ID_Funcionario
+                            WHERE Usuario = ?");
+    $stmt->bind_param("s", $user);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
         $dados = $result->fetch_assoc();
-        $passHash = $dados['Senha'];
+        if ($dados['Status'] == 'Ativo'){
+            $passHash = $dados['Senha'];
 
-        if (password_verify($password, $passHash)) {
-            $_SESSION['ID_Funcionario'] = $dados['ID_Funcionario'];
-            $_SESSION['Nome'] = $dados['Nome'];
-            $_SESSION['ID_Cargo'] = $dados['ID_Cargo'];
-            $_SESSION['expire'] = strtotime('+30 minutes', strtotime('now'));
-            $_SESSION["msg"] = "<div class='alert alert-primary' role='aviso'>
-                                    Olá <strong>".$_SESSION["Nome"]."</strong>, Login Efetuado com sucesso!
-                                </div>";
-            mysqli_close($conn);                    
-            header('Location: http://localhost/htdocs/Farmácia/Sistema/dashboard.php');
-            exit();
+            if (password_verify($password, $passHash)) {
+                $_SESSION['ID_Usuario'] = $dados['ID_Usuario'];
+                $_SESSION['ID_Funcionario'] = $dados['ID_Funcionario'];
+                $_SESSION['Nome'] = $dados['Nome'];
+                $_SESSION['ID_Cargo'] = $dados['ID_Cargo'];
+                $_SESSION['expire'] = strtotime('+30 minutes', strtotime('now'));
+                $_SESSION["msg"] = "<div class='alert alert-primary' role='aviso'>
+                                        Olá <strong>".$_SESSION["Nome"]."</strong>, Login efetuado com sucesso!
+                                    </div>";
+                mysqli_close($conn);                    
+                header('Location: http://localhost/htdocs/Farmácia/Sistema/dashboard.php');
+                exit();
+            }
+            else{
+                $_SESSION["msg"] = "<div class='alert alert-warning' role='aviso'>
+                                        Usuário ou senha estão incorretos. Por favor, verifique suas credenciais.
+                                    </div>";
+                mysqli_close($conn);
+                header('Location: http://localhost/htdocs/Farmácia/Sistema/index.php');
+                exit;
+            }
         }
-        else{
+        else {
             $_SESSION["msg"] = "<div class='alert alert-warning' role='aviso'>
-                                    Usuário ou senha estão incorretos. Por favor, verifique suas credenciais.
-                                </div>";
+                        Usuário não está ativo.
+                    </div>";
             mysqli_close($conn);
             header('Location: http://localhost/htdocs/Farmácia/Sistema/index.php');
             exit;
         }
+        
     }
     else{
         $_SESSION["msg"] = "<div class='alert alert-warning' role='aviso'>

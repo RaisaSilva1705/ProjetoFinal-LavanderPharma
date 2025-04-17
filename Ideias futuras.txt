@@ -7,6 +7,10 @@ FUNCIONÁRIOS
 2- criar tabela usuários -> parar de usar tabela funcionários para login
 3- Método de pesquisar digitando o funcionário
 
+USUÁRIOS
+1- senha padrão (quando cria) = mudar123
+2- ter um usuário admin (acesso total)
+
 CLIENTE
 1- Método de pesquisar digitando o funcionário
 

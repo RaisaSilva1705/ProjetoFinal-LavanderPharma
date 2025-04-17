@@ -1,29 +1,103 @@
-<?php
-    define("Home", "http://localhost/htdocs/Farmácia/");
-?>
+<style>
+    .wrapper {
+      display: flex;
+      height: 100vh;
+    }
 
-<nav class='navbar navbar-expand-lg navbar-dark bg-dark'>
-    <div class='container-fluid'>
-        <a class='navbar-brand' href='<?php echo Home?>/dashboard.php'>[Nome Farmácia]</a>
-        <button class='navbar-toggler' type='button' data-bs-toggle='collapse' data-bs-target='#navbarNav' aria-controls='navbarNav' aria-expanded='false' aria-label='Toggle navigation'>
-            <span class='navbar-toggler-icon'></span>
-        </button>
-        <div class='collapse navbar-collapse' id='navbarNav'>
-            <ul class='navbar-nav ms-auto'>
-                <li class='nav-item'><a class='nav-link' href='<?php echo Home?>/sistema/Clientes/index.php'>Clientes</a></li>
-                <li class='nav-item'><a class='nav-link' href='<?php echo Home?>/sistema/Prescricoes/index.php'>Prescrições</a></li>
-                <?php
-                    if ($mostrarFunc == true)
-                        echo "<li class='nav-item'><a class='nav-link' href='". Home ."/sistema/Funcionarios/index.php'>Funcionários</a></li>";
-                ?>                
-                <li class='nav-item'><a class='nav-link' href='<?php echo Home?>/sistema/Fornecedores/index.php'>Fornecedores</a></li>
-                <li class='nav-item'><a class='nav-link' href='<?php echo Home?>/sistema/Pedidos/index.php'>Pedidos</a></li>
-                <li class='nav-itam'><a class='nav-link' href='<?php echo Home?>/sistema/Estoque/index.php'>Estoque</a></li>
-                <li class='nav-itam'><a class='nav-link' href='<?php echo Home?>/sistema/Caixas/index.php'>Caixa</a></li>
-                <li class='nav-itam'><a class='nav-link' href='<?php echo Home?>/sistema/Relatorios/index.php'>Relatórios</a></li>
-                <li class='nav-item'><a class='nav-link active' href='<?php echo Home?>/dashboard.php'>Menu Principal</a></li>
-                <li class='nav-item'><a class='nav-link active' href="<?php echo Home?>/dev/Exec/sair.php">Sair</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
+    .sidebar {
+      width: 180px;
+      background-color: #343a40;
+      padding: 1rem;
+    }
+
+    .sidebar .nav-link,
+    .sidebar .dropdown-toggle {
+      color: #fff;
+    }
+
+    .sidebar .nav-link:hover,
+    .sidebar .dropdown-toggle:hover {
+      background-color: #495057;
+    }
+
+    .dropdown-submenu {
+      position: relative;
+    }
+
+    .dropdown-submenu > .dropdown-menu {
+      top: 0;
+      left: 100%;
+      margin-top: -0.125rem;
+      display: none;
+    }
+
+    .dropdown-submenu:hover > .dropdown-menu {
+      display: block;
+    }
+
+    .sidebar .dropdown-menu {
+      background-color: #343a40;
+    }
+
+    .sidebar .dropdown-item {
+      color: #fff;
+    }
+
+    .sidebar .dropdown-item:hover {
+      background-color: #495057;
+    }
+  </style>
+
+  <div class="wrapper">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <a href="<?php echo SISTEMA_URL ?>dashboard.php" class="navbar-brand text-white mb-3 d-block"><?php echo NOME ?></a>
+
+      <ul class="nav flex-column">
+        <!-- PDV -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">PDV</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Realizar Venda</a></li>
+            <li><a class="dropdown-item" href="#">Relatório de Vendas</a></li>
+          </ul>
+        </li>
+
+        <!-- Produtos -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Produtos</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Lista de Produtos</a></li>
+            <li><a class="dropdown-item" href="#">Adicionar Produto</a></li>
+            <li><a class="dropdown-item" href="#">Relatório</a></li>
+          </ul>
+        </li>
+
+        <!-- Pessoas com submenus -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Pessoas</a>
+          <ul class="dropdown-menu">
+            <li class="dropdown-submenu">
+              <a class="dropdown-item dropdown-toggle" href="#">Clientes</a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">Lista de Clientes</a></li>
+                <li><a class="dropdown-item" href="#">Adicionar Cliente</a></li>
+              </ul>
+            </li>
+            <li class="dropdown-submenu">
+              <a class="dropdown-item dropdown-toggle" href="#">Usuários</a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">Lista de Usuários</a></li>
+                <li><a class="dropdown-item" href="#">Adicionar Usuário</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Logout -->
+        <li class="nav-item">
+          <a class="nav-link" href="#">Sair</a>
+        </li>
+      </ul>
+    </nav>
+  </div>

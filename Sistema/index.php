@@ -15,13 +15,11 @@ if(isset($_SESSION['nome']) && $_SESSION['nome'] != null) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LavanderPharma - Login</title>
+    <title><?php echo NOME?> - Login</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">    
     <!-- Tema Dark -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.3.0-alpha1/darkly/bootstrap.min.css">
-    <link href="../central/css/login.css" rel="stylesheet">
-
 </head>
 <body>
     <!-- Navbar -->
@@ -55,8 +53,8 @@ if(isset($_SESSION['nome']) && $_SESSION['nome'] != null) {
                 </div>
                 <form method="post" action="../Dev/Exec/index-loginexec.php">
                     <div class="mb-3">
-                        <label for="email" class="texto-site">Email</label>
-                        <input type="text" class="form-control" id="email" name="email" placeholder="Digite seu email">
+                        <label for="user" class="texto-site">Usuário</label>
+                        <input type="text" class="form-control" id="user" name="user" placeholder="Digite seu usuário">
                     </div>
                     <div class="mb-3">
                         <label for="password" class="texto-site">Senha</label>

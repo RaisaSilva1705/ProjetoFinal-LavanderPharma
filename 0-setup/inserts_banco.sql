@@ -47,18 +47,6 @@ INSERT INTO `CARGOS_FUNCIONARIOS` (`Cargo`, `Descricao`) VALUES
 ('Consultor(a) de Dermocosméticos', 'Especialista em produtos dermatológicos e cosméticos'),
 ('RH', 'Responsável pela gestão de recursos humanos');
 
--- Inserts para a tabela FUN_ACESSO
-INSERT INTO `FUN_ACESSO` (`ID_Cargo`, `Modulo`, `Acesso_Permitido`) VALUES
-(1, 'Dispensação de Medicamentos', TRUE),
-(2, 'Vendas', TRUE),
-(3, 'Controle de Estoque', TRUE),
-(4, 'Acesso Total', TRUE),
-(5, 'Relatórios e Financeiro', TRUE),
-(6, 'Financeiro e Documentos', TRUE),
-(7, 'Nenhum Acesso', FALSE),
-(8, 'Catálogo de Produtos', TRUE),
-(9, 'Gestão de Funcionários', TRUE);
-
 -- Inserts para a tabela FUNCIONARIOS
 INSERT INTO `FUNCIONARIOS` (`Nome`, `Tipo`, `Documento`, `Telefone`, `ID_Cargo`, `Email`, `Senha`, `Salario`, `Data_Admissao`, `Data_Demissão`, `Status`, `OBS`, `Data_Cadastro`, `Data_Alteracao`) VALUES
 ('Carlos Silva', 'PF', '987.654.321-00', '(11) 91234-5678', 1, 'carlos@gmail.com',

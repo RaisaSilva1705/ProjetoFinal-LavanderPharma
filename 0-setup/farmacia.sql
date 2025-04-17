@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `CARGOS_FUNCIONARIOS` (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `MODULOS` (
     `ID_Modulo` INT AUTO_INCREMENT PRIMARY KEY,
-    `Cargo` VARCHAR(255) NOT NULL UNIQUE
+    `Modulo` VARCHAR(255) NOT NULL UNIQUE
 ) ENGINE = InnoDB;
 /* drop table MODULOS; */
 /* select * from MODULOS; */
@@ -84,14 +84,13 @@ CREATE TABLE IF NOT EXISTS `CARGOS_MODULOS` (
 CREATE TABLE IF NOT EXISTS `FUNCIONARIOS` (
     `ID_Funcionario` INT AUTO_INCREMENT PRIMARY KEY,
     `Nome` VARCHAR(255) NOT NULL,
-    `Tipo` ENUM('PJ', 'PF') NOT NULL,
-    `Documento` VARCHAR(18) NOT NULL UNIQUE,
-    `Telefone` VARCHAR(20) NOT NULL,
+    `Tipo` ENUM('PJ', 'PF') DEFAULT NULL,
+    `Documento` VARCHAR(18) DEFAULT NULL UNIQUE,
+    `Telefone` VARCHAR(20) DEFAULT NULL,
     `ID_Cargo` INT NOT NULL,
     `Email` VARCHAR(255) NOT NULL UNIQUE,
-    `Senha` VARCHAR(100) NOT NULL,
-    `Salario` DECIMAL(10,2) NOT NULL,
-    `Data_Admissao` DATE NOT NULL,
+    `Salario` DECIMAL(10,2) DEFAULT NULL,
+    `Data_Admissao` DATE DEFAULT NULL,
     `Data_Demissão` DATE DEFAULT NULL,
     `Status` ENUM('Ativo', 'Inativo') DEFAULT 'Ativo',
     `OBS` TEXT DEFAULT NULL,
@@ -101,6 +100,21 @@ CREATE TABLE IF NOT EXISTS `FUNCIONARIOS` (
 ) ENGINE = InnoDB;
 /* drop table FUNCIONARIOS; */
 /* select * from FUNCIONARIOS; */
+
+-- -----------------------------------------------------
+-- Table `USUARIOS`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `USUARIOS` (
+    `ID_Usuario` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_Funcionario` INT NOT NULL,
+    `Usuario` VARCHAR(50) NOT NULL UNIQUE,
+    `Senha` VARCHAR(255) NOT NULL,
+    `Status` ENUM('Ativo', 'Inativo') DEFAULT 'Ativo',
+    `Data_Cadastro` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`)
+);
+/* drop table USUARIOS; */
+/* select * from USUARIOS; */
 
 -- -----------------------------------------------------
 -- Table `FORNECEDORES`
@@ -126,22 +140,6 @@ CREATE TABLE IF NOT EXISTS `FORNECEDORES` (
 ) ENGINE = InnoDB;
 /* drop table FORNECEDORES; */
 /* select * from FORNECEDORES; */
-
--- -----------------------------------------------------
--- Table `LOTES`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `LOTES` (
-    `ID_Lote` INT AUTO_INCREMENT PRIMARY KEY,
-    `ID_Produto` INT NOT NULL,
-    `ID_Fornecedor` INT NOT NULL,
-    `Quantidade` INT NOT NULL,
-    `Data_Validade` DATE NOT NULL,
-    `Data_Entrada` DATE NOT NULL,
-    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
-    FOREIGN KEY (`ID_Fornecedor`) REFERENCES `FORNECEDORES` (`ID_Fornecedor`)
-) ENGINE = InnoDB;
-/* drop table LOTES; */
-/* select * from LOTES; */
 
 -- -----------------------------------------------------
 -- Table `CATEGORIAS`    
@@ -190,6 +188,22 @@ CREATE TABLE IF NOT EXISTS `PRODUTOS` (
 ) ENGINE = InnoDB;
 /* drop table PRODUTOS; */
 /* select * from PRODUTOS; */
+
+-- -----------------------------------------------------
+-- Table `LOTES`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `LOTES` (
+    `ID_Lote` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_Produto` INT NOT NULL,
+    `ID_Fornecedor` INT NOT NULL,
+    `Quantidade` INT NOT NULL,
+    `Data_Validade` DATE NOT NULL,
+    `Data_Entrada` DATE NOT NULL,
+    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
+    FOREIGN KEY (`ID_Fornecedor`) REFERENCES `FORNECEDORES` (`ID_Fornecedor`)
+) ENGINE = InnoDB;
+/* drop table LOTES; */
+/* select * from LOTES; */
 
 -- -----------------------------------------------------
 -- Table `CATEGORIAS_MEDICAMENTOS`
@@ -249,10 +263,21 @@ CREATE TABLE IF NOT EXISTS `MOVIMENTACAO_ESTOQUE` (
 /* select * from MOVIMENTACAO_ESTOQUE; */
 
 -- -----------------------------------------------------
+-- Table `CAIXAS_REGISTRADOS`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `CAIXAS_REGISTRADOS` (
+    `ID_CaixaRegistrado` INT AUTO_INCREMENT PRIMARY KEY,
+    `Nome_Caixa` INT NOT NULL
+) ENGINE = InnoDB;
+/* drop table CAIXAS_REGISTRADOS; */
+/* select * from CAIXAS_REGISTRADOS; */
+
+-- -----------------------------------------------------
 -- Table `CAIXAS`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `CAIXAS` (
     `ID_Caixa` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_CaixaRegistrado` INT NOT NULL,
     `ID_Funcionario` INT NOT NULL,
     `Data_Abertura` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `Saldo_Inicial` DECIMAL(10,2) NOT NULL DEFAULT 0.00, 
@@ -260,7 +285,8 @@ CREATE TABLE IF NOT EXISTS `CAIXAS` (
     `Saldo_Final` DECIMAL(10,2) DEFAULT NULL,
     `Valor_Vendido` DECIMAL(10,2) DEFAULT NULL,
     `Status` ENUM('Aberto', 'Fechado') NOT NULL DEFAULT 'Aberto',
-    FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`)
+    FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`),
+    FOREIGN KEY (`ID_CaixaRegistrado`) REFERENCES `CAIXAS_REGISTRADOS` (`ID_CaixaRegistrado`)
 ) ENGINE = InnoDB;
 /* drop table CAIXAS; */
 /* select * from CAIXAS; */

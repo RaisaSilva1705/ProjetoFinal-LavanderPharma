@@ -1,0 +1,22 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    z-index: 1;
+}
+body {
+    display: flex;
+    min-height: 100vh;
+}
+.content {
+    flex-grow: 1;
+    background-color: #f8f9fa;
+    overflow-y: auto;
+    flex-direction: column;
+}
+footer {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #f8f9fa;
+}
