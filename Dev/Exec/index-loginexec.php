@@ -5,7 +5,6 @@ ini_set('display_errors', 1);
 
 include_once 'config.php';
 include 'conexao.php';
-$_SESSION["msg"] = "teste";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($conn->connect_error) {
