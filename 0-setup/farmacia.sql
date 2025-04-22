@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS `MOVIMENTACAO_ESTOQUE` (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `CAIXAS_REGISTRADOS` (
     `ID_CaixaRegistrado` INT AUTO_INCREMENT PRIMARY KEY,
-    `Nome_Caixa` INT NOT NULL
+    `Nome_Caixa` VARCHAR(255) NOT NULL
 ) ENGINE = InnoDB;
 /* drop table CAIXAS_REGISTRADOS; */
 /* select * from CAIXAS_REGISTRADOS; */

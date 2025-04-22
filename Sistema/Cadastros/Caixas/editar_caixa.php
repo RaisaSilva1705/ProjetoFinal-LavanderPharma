@@ -9,25 +9,52 @@ include DEV_PATH . 'Exec/conexao.php';
 include DEV_PATH . "Exec/validar_sessao.php";
 include DEV_PATH . "Exec/validar_acesso.php";
 
+// Verificar se o parâmetro "codigo" foi passado pela URL
+if (isset($_GET['codigo'])) {
+    $codigo_caixa = $_GET['codigo'];
+
+    // Consultar os dados do caixa no banco de dados
+    $sql = "SELECT * FROM CAIXAS_REGISTRADOS WHERE ID_CaixaRegistrado = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $codigo_caixa);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    // Verificar se o caixa foi encontrado
+    if ($result->num_rows > 0) {
+        $caixa = $result->fetch_assoc();
+    }
+    else {
+        echo "Caixa não encontrado.";
+        exit();
+    }
+}
+else {
+    echo "Código do caixa não fornecido.";
+    exit();
+}
+
 // Verificar se o formulário foi enviado
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nome_caixa = $_POST['nomeCaixa'];
 
-    // Inserir os dados do caixa no banco de dados
-    $sql = "INSERT INTO CAIXAS_REGISTRADOS (Nome_Caixa) VALUES (?)";
+    // Atualizar os dados do caixa no banco de dados
+    $sql = "UPDATE CAIXAS_REGISTRADOS SET 
+                Nome_Caixa = ?
+            WHERE ID_CaixaRegistrado = ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $nome_caixa);
+    $stmt->bind_param("si", 
+        $nome_caixa, $codigo_caixa);
 
     if ($stmt->execute()) {
         session_start();
         $_SESSION["msg"] = "<div class='alert alert-primary' role='aviso'>
-                                Caixa cadastrado com sucesso!
+                                Dados atualizados com sucesso!
                             </div>";
         header("Location: caixas.php"); // Redirecionar para a listagem de caixa
         exit();
-    }
-    else {
+    } else {
         echo "Erro ao atualizar os dados: " . $conn->error;
     }
 }
@@ -50,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="content">
             <!-- Banner -->
             <div class="container-fluid bg-secondary text-white text-center p-4">
-                <h3>Cadastro de Caixa</h3>
+                <h3>Edição de Caixa</h3>
                 <?php
                     // Verifica se $_SESSION["msg"] não é nulo e imprime a mensagem
                     if(isset($_SESSION["msg"]) && $_SESSION["msg"] != null){
@@ -65,11 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="container p-5">
                 <form action="#" method="POST">
                     <div class="mb-4">
-                        <label for="nomeCaixa" class="form-label">Nome do Caixa</label>
-                        <input type="text" class="form-control" name="nomeCaixa" id="nomeCaixa" placeholder="Digite o nome do caixa" required>
+                    <label for="nomeCaixa" class="form-label">Nome do Caixa</label>
+                    <input type="text" class="form-control" id="nomeCaixa" name="nomeCaixa" value="<?php echo htmlspecialchars($caixa['Nome_Caixa'] ?? ''); ?>" placeholder="Digite o nome do caixa" required>
                     </div>
 
-                    <button type="submit" class="btn btn-primary mt-4">Cadastrar Caixa</button>
+                    <button type="submit" class="btn btn-primary mt-4">Editar Caixa</button>
                 </form>
             </div>
             

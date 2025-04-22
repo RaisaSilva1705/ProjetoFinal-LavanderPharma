@@ -31,7 +31,6 @@ while ($row = $result->fetch_assoc()) {
 }
 
 // 3. Verifique se a página faz parte de um módulo permitido
-// Aqui você pode usar um switch ou um mapeamento simples
 $mapaPaginasModulos = [
     // ----- Sem grupo ------
     'Home' => ['dashboard.php'],
@@ -95,10 +94,6 @@ if ($moduloAtual && !in_array($moduloAtual, $modulosPermitidos)) {
     if (getIdentificadorPagina($_SERVER['PHP_SELF']) !== 'dashboard.php') {
         $_SESSION["msg"] = "<div class='alert alert-danger'>Você não tem permissão para acessar este módulo.</div>";
         header('Location: http://localhost/htdocs/Farmácia/Sistema/dashboard.php');
-        exit;
-    } else {
-        // Se o dashboard também estiver bloqueado, só exibe uma mensagem simples sem redirecionar
-        echo "<div class='alert alert-danger'>Você não tem permissão para acessar nem mesmo o dashboard.</div>";
         exit;
     }
 }

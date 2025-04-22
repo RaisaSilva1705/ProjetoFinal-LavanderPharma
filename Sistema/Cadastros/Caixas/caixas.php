@@ -64,7 +64,8 @@ $result = $conn->query($sql);
                                     echo '<td>' . $row["Nome_Caixa"] . '</td>';
                                     echo '<td>
                                             <a href="editar_caixa.php?codigo=' . $row["ID_CaixaRegistrado"] . '" class="btn btn-info btn-sm">Editar</a>
-                                        </td>';
+                                            <a href="excluir_caixa.php?codigo=' . $row["ID_CaixaRegistrado"] . '" class="btn btn-danger btn-sm">Excluir</a>
+                                          </td>';
                                     echo '</tr>';
                                 }
                             } else {
