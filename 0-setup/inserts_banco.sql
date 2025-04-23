@@ -104,7 +104,7 @@ INSERT INTO `PRODUTOS` (`ID_Categoria`, `ID_Fornecedor`, `Nome`, `Med`, `Marca`,
 (7, 1, 'Soro Fisiológico 500ml', FALSE, 'BioClean', 'Solução estéril para limpeza', 'Ativo', 20, '30049099', '7891234567896');
 
 -- Inserindo categorias de medicamentos
-INSERT INTO `CATEGORIAS_MEDICAMENTOS` (`Categoria`) VALUES 
+INSERT INTO `FAIXAS_MEDICAMENTOS` (`Faixa`) VALUES 
 ('Medicamento Isento de Prescrição'),
 ('Amarela'),
 ('Amarela e Vermelha s/ Retenção de Prescrição'),

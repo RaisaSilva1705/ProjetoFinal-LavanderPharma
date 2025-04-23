@@ -1,5 +1,5 @@
-INSERT INTO CARGOS_FUNCIONARIOS (Cargo, Descricao)
-VALUES ('Administrador', 'Acesso irrestrito ao sistema.');
+INSERT INTO CARGOS_FUNCIONARIOS (ID_Cargo, Cargo, Descricao)
+VALUES (1, 'Administrador', 'Acesso irrestrito ao sistema.');
 
 INSERT INTO MODULOS (Modulo) VALUES 
 -- Sem grupo
@@ -58,4 +58,3 @@ VALUES (1, 'Administrador Geral', 'admin@admin.com', 1);
 
 INSERT INTO USUARIOS (ID_Funcionario, Usuario, Senha, Data_Cadastro)
 VALUES (1, 'admin', '$2y$10$ywTQsi8pt7ttAVku9vKPXuDhA.VuIqZkMRzLUKOgJKd.mmmD/yzUO', CURDATE());
-

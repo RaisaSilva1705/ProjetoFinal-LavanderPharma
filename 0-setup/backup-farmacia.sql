@@ -209,21 +209,12 @@ CREATE TABLE IF NOT EXISTS `LOTES` (
 -- Table `CATEGORIAS_MEDICAMENTOS`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `CATEGORIAS_MEDICAMENTOS` (
-    `ID_CategoriaMed` INT AUTO_INCREMENT PRIMARY KEY,
-    `Categoria` VARCHAR(255) NOT NULL
+    `ID_Categoria_Med` INT AUTO_INCREMENT PRIMARY KEY,
+    `Categoria` VARCHAR(255) NOT NULL,
+    `Descricao` VARCHAR(255) DEFAULT NULL
 ) ENGINE = InnoDB;
 /* drop table CATEGORIAS_MEDICAMENTOS; */
 /* select * from CATEGORIAS_MEDICAMENTOS; */
-
--- -----------------------------------------------------
--- Table `FAIXAS_MEDICAMENTOS`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `FAIXAS_MEDICAMENTOS` (
-    `ID_FaixaMed` INT AUTO_INCREMENT PRIMARY KEY,
-    `Faixa` VARCHAR(255) NOT NULL
-) ENGINE = InnoDB;
-/* drop table FAIXAS_MEDICAMENTOS; */
-/* select * from FAIXAS_MEDICAMENTOS; */
 
 -- -----------------------------------------------------
 -- Table `MEDICAMENTOS`
@@ -231,14 +222,11 @@ CREATE TABLE IF NOT EXISTS `FAIXAS_MEDICAMENTOS` (
 CREATE TABLE IF NOT EXISTS `MEDICAMENTOS` (
     `ID_Medicamento` INT AUTO_INCREMENT PRIMARY KEY,
     `ID_Produto` INT NOT NULL,
-    `ID_CategoriaMed` INT NOT NULL,
-    `ID_FaixaMed` INT NOT NULL,
-    `Tipo` ENUM('Genérico', 'Similar', 'Referência') NOT NULL,
+    `ID_Categoria_Med` INT NOT NULL,
     `Prin_Ativo` VARCHAR(255) DEFAULT NULL,
     `OBS` VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`) ON DELETE CASCADE,
-    FOREIGN KEY (`ID_FaixaMed`) REFERENCES `FAIXAS_MEDICAMENTOS` (`ID_FaixaMed`),
-    FOREIGN KEY (`ID_CategoriaMed`) REFERENCES `CATEGORIAS_MEDICAMENTOS` (`ID_CategoriaMed`)
+    FOREIGN KEY (`ID_Categoria_Med`) REFERENCES `CATEGORIAS_MEDICAMENTOS` (`ID_Categoria_Med`)
 ) ENGINE = InnoDB;
 /* drop table MEDICAMENTOS; */
 /* select * from MEDICAMENTOS; */
