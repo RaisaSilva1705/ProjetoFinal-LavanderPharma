@@ -186,6 +186,7 @@ include DEV_PATH . "Exec/validar_acesso.php";
                     </div>
 
                     <button type="submit" class="btn btn-primary mt-4">Salvar Cargo</button>
+                    <a href="cargos.php" class="btn btn-secondary mt-4 ms-2">Cancelar</a>
                 </form>
             </div>
 

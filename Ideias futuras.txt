@@ -27,12 +27,34 @@ PRODUTO
 
 
 
-CATEGORIAS DE MEDICAMENTOS
-'Medicamento Isento de Prescrição',
-'Amarela',
-'Amarela e Vermelha s/ Retenção de Prescrição',
-'Amarela e Vermelha c/ Retenção de Prescrição',
-'Amarela e Preta',
-'Vermelha s/ Retenção de Prescrição',
-'Vermelha c/ Retenção de Prescrição',
-'Preta'
+
+# Fluxo de Cadastro de Produtos e Compras
+
+1. Cadastrar Produto
+   - Nome
+   - Descrição
+   - Categoria
+   - Unidade
+   - Estoque mínimo
+
+2. Cadastrar Fornecedor
+   - Nome
+   - CNPJ
+   - Contato
+
+3. Registrar Compra
+   - Selecionar Produto
+   - Selecionar Fornecedor
+   - Informar Quantidade Comprada
+   - Informar Valor de Compra (Preço de Custo)
+   - Atualizar Estoque
+
+4. Definir Preço de Venda
+   - Baseado no Preço de Custo + Margem de Lucro
+   - Atualizar informações do Produto (Preço de Venda)
+
+5. Realizar Venda ao Cliente
+   - Selecionar Produto
+   - Aplicar Preço de Venda
+   - Gerar Pedido / Nota
+

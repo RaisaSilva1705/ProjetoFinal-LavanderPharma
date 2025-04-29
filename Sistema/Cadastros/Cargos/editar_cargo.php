@@ -178,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <div class="mt-4">
                     <button type="submit" class="btn btn-success">Salvar Alterações</button>
-                    <a href="cargos.php" class="btn btn-secondary">Cancelar</a>
+                    <a href="cargos.php" class="btn btn-secondary ms-2">Cancelar</a>
                 </div>
             </form>
         </div>

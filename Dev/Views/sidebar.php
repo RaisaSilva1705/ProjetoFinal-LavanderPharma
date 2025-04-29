@@ -68,6 +68,7 @@
     <ul class="dropdown-menu">
       <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Cadastros/Caixas/caixas.php">Caixa</a></li>
       <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Cadastros/Cargos/cargos.php">Cargo</a></li>
+      <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Cadastros/Unidades/unidades.php">Unidade</a></li>
       <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Cadastros/Pagamentos/formas_pagamentos.php">Forma de Pagamento</a></li>
     </ul>
   </div>
@@ -79,6 +80,17 @@
       <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Produtos/produtos.php">Lista de Produtos</a></li>
       <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Produtos/cadastrar_produto.php">Adicionar Produto</a></li>
       <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Produtos/relatorio_produtos.php">Relatório de Produtos</a></li>
+    </ul>
+  </div>
+
+  <!-- Estoque -->
+  <div class="nav-item dropdown">
+    <a class="dropdown-toggle" href="#" data-bs-toggle="dropdown">Estoque</a>
+    <ul class="dropdown-menu">
+      <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Estoque/estoque.php">Conferir Estoque</a></li>
+      <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Estoque/movimentacao_estoque.php?mov=E">Entrada</a></li>
+      <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Estoque/movimentacao_estoque.php?mov=S">Saída</a></li>
+      <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>Estoque/relatorio_estoque.php">Relatório</a></li>
     </ul>
   </div>
 
