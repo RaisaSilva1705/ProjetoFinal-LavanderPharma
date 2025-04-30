@@ -24,6 +24,8 @@ $sql = "SELECT
         LEFT JOIN ESTOQUE E
             ON E.ID_Produto = P.ID_Produto";
 $result = $conn->query($sql);
+
+
 ?>
 
 <!DOCTYPE html>
@@ -76,13 +78,14 @@ $result = $conn->query($sql);
                         <?php
                             if ($result->num_rows > 0) {
                                 while ($row = $result->fetch_assoc()) { // quebra de página após 20 resultados
+                                    $preco = ($row['Preco'] == null) ?  0.00 : $row['Preco']; 
                                     echo '<tr>';
                                         echo '<td>' . $row["ID_Produto"] . '</td>';
                                         echo '<td>' . $row["Nome"] . '</td>';
                                         echo '<td>' . $row["Marca"] . '</td>';
                                         echo '<td>' . $row["Categoria"] . '</td>';
                                         echo '<td>' . $row["Quantidade"] . '</td>';
-                                        echo '<td>' . $row["Preco"] . '</td>';
+                                        echo '<td> R$ ' . $preco . '</td>';
                                         echo '<td>
                                                 <a href="editar_produto.php?codigo=' . $row["ID_Produto"] . '" class="btn btn-info btn-sm">Editar</a>
                                             </td>';

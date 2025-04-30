@@ -56,19 +56,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Inserção na tabela PRODUTOS
     $sql = "INSERT INTO PRODUTOS 
-                (ID_Categoria, Nome, Med, Marca, Descricao, ID_Unidade,
+                (ID_Categoria, Nome, Marca, Descricao, ID_Unidade,
                 Quant_Minima, Status, OBS, NCM, EAN_GTIN, CBENEF, CEST, EXTIPI, CFOP, MVA, NFCI, Foto) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("isissiisssssssidss",
-        $id_categoria, $nome, $med, $marca, $descricao, $id_unidade,
+    $stmt->bind_param("isssiisssssssidss",
+        $id_categoria, $nome, $marca, $descricao, $id_unidade,
         $quant_minima, $status, $obs, $ncm, $ean_gtin, $cbenef, $cest,
         $extipi, $cfop, $mva, $nfci, $foto
     );
 
+
     if ($stmt->execute()) {
+        // Inserção na tabela PRODUTOS
         $id_produto = $stmt->insert_id;
+        $quantidadeEstoque = 0;
+        $sql = "INSERT INTO ESTOQUE 
+                    (ID_Produto, Quantidade, Data_Atualizacao) 
+                VALUES (?, ?, NOW())";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $id_produto, $quantidadeEstoque);
+        $stmt->execute();
 
         // Se for medicamento, insere também na tabela MEDICAMENTOS
         if ($id_categoria == 1) {

@@ -104,3 +104,7 @@ INSERT INTO PRODUTOS (ID_Categoria, Nome, Marca, ID_Unidade, NCM, EAN_GTIN) VALU
 
 INSERT INTO MEDICAMENTOS (ID_Produto, ID_CategoriaMed, ID_Tarja, Tipo, Prin_Ativo) VALUES
 (1, 2, 1, 'Genérico', 'Paracetamol');
+
+INSERT INTO ESTOQUE (ID_Produto, Quantidade, Data_Atualizacao) VALUES
+(1, 0, NOW()),
+(2, 0, NOW());
