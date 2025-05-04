@@ -11,14 +11,64 @@ include DEV_PATH . "Exec/validar_sessao.php";
 include DEV_PATH . "Exec/validar_acesso.php";
 
 // Busca caixas
-$sqlCaixas = "SELECT ID_Caixa, Caixa FROM CAIXAS";
+$sqlCaixas = "SELECT ID_Caixa,
+                     Caixa
+              FROM CAIXAS";
 $caixas = $conn->query($sqlCaixas);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST'){
-    $_SESSION['ID_Caixa'] = $_POST['id_caixa'];
+    $id_caixa = $_POST['id_caixa'];
+    $id_funcionario = $_SESSION['ID_Funcionario'];
+    $saldoInicial = $_POST['saldo_inicial'];
 
-    header("Location: pdv.php");
-    exit();
+    // Buscar o status real do caixa informado
+    $sqlStatus = "SELECT 
+                    Status 
+                  FROM CAIXAS 
+                  WHERE ID_Caixa = ?";
+    $stmtStatus = $conn->prepare($sqlStatus);
+    $stmtStatus->bind_param("i", $id_caixa);
+    $stmtStatus->execute();
+    $resultStatus = $stmtStatus->get_result();
+    $caixa = $resultStatus->fetch_assoc();
+
+    if($caixa['Status'] == 'Fechado'){
+        $status = 'Aberto';
+
+        $sql ="UPDATE CAIXAS SET
+                Status = ?
+               WHERE ID_Caixa = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $status, $id_caixa);
+        
+        if ($stmt->execute()){
+            $sql ="INSERT INTO CAIXAS_ABERTOS 
+                    (ID_Caixa, ID_Funcionario, 
+                    Data_Abertura, Saldo_Inicial)
+                   VALUES (?, ?, NOW(), ?);";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iid", $id_caixa, $id_funcionario, $saldoInicial);
+            $stmt->execute();
+
+            $_SESSION['ID_Caixa'] = $id_caixa;
+            header("Location: pdv.php");
+            exit();
+        }
+        else {
+            $_SESSION["msg"] = "<div class='alert alert-primary' role='aviso'>
+                                    Erro ao abrir caixa.
+                                </div>";
+            header("Location: caixa_pdv.php"); 
+            exit();
+        }
+    }
+    else {
+        $_SESSION["msg"] = "<div class='alert alert-primary' role='aviso'>
+                                Caixa já está aberto.
+                            </div>";
+        header("Location: caixa_pdv.php"); 
+        exit();
+    }
 }
 ?>
 
@@ -47,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
                 <?php
                     // Verifica se $_SESSION["msg"] não é nulo e imprime a mensagem
                     if(isset($_SESSION["msg"]) && $_SESSION["msg"] != null){
-                        $_SESSION["msg"];
+                        echo $_SESSION["msg"];
                         // Limpa a mensagem para evitar que seja exibida novamente
                         $_SESSION["msg"] = null;
                     }
@@ -55,14 +105,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
             </div>
             <div class="container m-4">
                 <form action="#" method="POST">
-                    <div class="col-md-3 mb-3">
-                        <label for="id_caixa" class="form-label">Selecione o Caixa</label>
-                        <select class="form-select" name="id_caixa" id="id_caixa" required>
-                            <option value="">Selecione</option>
-                            <?php while($caixa = $caixas->fetch_assoc()): ?>
-                                <option value="<?= $caixa['ID_Caixa'] ?>"><?= $caixa['Caixa'] ?></option>
-                            <?php endwhile; ?>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="id_caixa" class="form-label">Selecione o Caixa</label>
+                            <select class="form-select" name="id_caixa" id="id_caixa" required>
+                                <option value="">Selecione</option>
+                                <?php while($caixa = $caixas->fetch_assoc()): ?>
+                                    <option value="<?= $caixa['ID_Caixa'] ?>"><?= $caixa['Caixa'] ?></option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="saldo_inicial">Saldo Inicial</label>
+                            <input class="form-control" type="number" name="saldo_inicial" id="saldo_inicial" required placeholder="Digite o valor inicial...">
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary mt-4">Abrir Caixa</button>
                 </form>

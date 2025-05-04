@@ -15,6 +15,13 @@ if (!isset($_SESSION['ID_Caixa'])){
     exit();
 }
 
+if (isset($_POST['nova_venda'])) {
+    unset($_SESSION['carrinho']);
+    unset($_SESSION['ultimo_produto']);
+    header("Location: pdv.php");
+    exit;
+}
+
 // Inicializa o carrinho
 if (!isset($_SESSION['carrinho'])) $_SESSION['carrinho'] = [];
 
@@ -124,20 +131,30 @@ if (isset($_GET['remover'])) {
                                 $id_venda = 1;
                             }
                         ?>
-                        <label>Nº Venda:</label>
-                        <input type="text" class="form-control" value="<?php echo $id_venda ?>" readonly>
+                        <label for="id_venda" class="form-label">Nº Venda:</label>
+                        <input type="text" name="id_venda" id="id_venda" class="form-control" value="<?php echo $id_venda ?>" readonly>
                     </div>
                     <div class="col-md-3">
-                        <label>Data Venda:</label>
-                        <input type="text" class="form-control" value="<?= date('d/m/Y H:i') ?>" readonly>
+                        <label for="data" class="form-label">Data Venda:</label>
+                        <input type="text" name="data" id="data" class="form-control" value="<?= date('d/m/Y H:i') ?>" readonly>
                     </div>
                     <div class="col-md-3">
-                        <label>Cliente:</label>
-                        <input type="text" class="form-control" placeholder="Consumidor Final">
+                        <?php 
+                            // Busca caixas
+                            $sqlCli = "SELECT ID_Cliente, Nome FROM CLIENTES";
+                            $clientes = $conn->query($sqlCli);
+                        ?>
+                        <label for="id_cliente" class="form-label">Cliente:</label>
+                        <select class="form-select" name="id_cliente" id="id_cliente" required>
+                            <option value="">Selecione</option>
+                            <?php while($cliente = $clientes->fetch_assoc()): ?>
+                                <option value="<?= $cliente['ID_Cliente'] ?>"><?= $cliente['Nome'] ?></option>
+                            <?php endwhile; ?>
+                        </select>
                     </div>
                     <div class="col-md-3">
-                        <label>Vendedor:</label>
-                        <input type="text" class="form-control" value="<?php echo $_SESSION['Nome'] ?>" readonly>
+                        <label for="funcionario" class="form-label">Vendedor:</label>
+                        <input type="text" class="form-control" name="funcionario" id="funcionario" value="<?php echo $_SESSION['Nome'] ?>" readonly>
                     </div>
                 </div>
 
@@ -291,8 +308,16 @@ if (isset($_GET['remover'])) {
                         <input type="text" class="form-control" value="<?= $totalItens ?>" readonly>
                     </div>
                     <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
-                        <button class="btn btn-secondary">Nova Venda</button>
-                        <form action="finalizar_venda.php" method="POST">
+                        <form action="pdv.php" method="POST">
+                            <input type="hidden" name="nova_venda" value="1">
+                            <button class="btn btn-secondary" type="submit">Nova Venda</button>
+                        </form>
+
+                        <form action="finalizarvenda_pdv.php" method="POST">
+                            <input type="hidden" name="valor_total" value="<?= $totalGeral ?>">
+                            <input type="hidden" name="total_itens" value="<?= $totalItens ?>">
+                            <input type="hidden" name="id_cliente_hidden" id="id_cliente_hidden" value="">
+                            <input type="hidden" name="desconto" value="<?= $desconto = 0.00 ?>">
                             <button class="btn btn-success" type="submit">Finalizar</button>
                         </form>
                         <button class="btn btn-danger">Fechar Caixa</button>
@@ -303,6 +328,7 @@ if (isset($_GET['remover'])) {
         </div>
 
         <script>
+            // MUDAR OS VALORES 
             document.getElementById('codigo').addEventListener('change', function () {
                 const codigo = this.value;
 
@@ -327,6 +353,15 @@ if (isset($_GET['remover'])) {
                         console.error(err);
                     });
             });
+
+            // ATUALIZA HIDDEN INPUT APÓS SELECIONAR CLIENTE
+            document.getElementById('id_cliente').addEventListener('change', function () {
+                const hiddenCliente = document.getElementById('id_cliente_hidden');
+                hiddenCliente.value = this.value;
+            });
+
+            // Atualiza na carga inicial também (caso já tenha valor selecionado)
+            hiddenCliente.value = document.getElementById('id_cliente').value;
         </script>
     </body>
 </html>

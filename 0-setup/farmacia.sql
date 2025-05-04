@@ -1,9 +1,9 @@
 -- -----------------------------------------------------
--- Criando BATABASE `lavanderpharma`
+-- Criando BATABASE `sistemaFarmacia`
 -- -----------------------------------------------------
-CREATE DATABASE IF NOT EXISTS `lavanderpharma` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `lavanderpharma`;
-/* drop database lavanderpharma;*/
+CREATE DATABASE IF NOT EXISTS `sistemaFarmacia` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `sistemaFarmacia`;
+/* drop database sistemaFarmacia; */
 
 -- -----------------------------------------------------
 -- Table `CLIENTES`
@@ -196,6 +196,7 @@ CREATE TABLE IF NOT EXISTS `PRODUTOS` (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `LOTES` (
     `ID_Lote` INT AUTO_INCREMENT PRIMARY KEY,
+    `Nome_Lote` VARCHAR(255) NOT NULL,
     `ID_Produto` INT NOT NULL,
     `ID_Fornecedor` INT NOT NULL,
     `Quantidade` INT NOT NULL,
@@ -374,7 +375,6 @@ CREATE TABLE IF NOT EXISTS `ITENS_VENDA` (
     `ID_Venda` INT NOT NULL,
     `ID_Produto` INT NOT NULL,
     `Quantidade` INT NOT NULL,
-    `Preco_Unitario` DECIMAL(10,2) NOT NULL,
     `Valor_Total` DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (`ID_Venda`) REFERENCES `VENDAS` (`ID_Venda`) ON DELETE CASCADE,
     FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`)

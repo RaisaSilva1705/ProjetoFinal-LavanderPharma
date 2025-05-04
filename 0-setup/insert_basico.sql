@@ -105,5 +105,9 @@ INSERT INTO MEDICAMENTOS (ID_Produto, ID_CategoriaMed, ID_Tarja, Tipo, Prin_Ativ
 (1, 2, 1, 'Genérico', 'Paracetamol');
 
 INSERT INTO ESTOQUE (ID_Produto, Quantidade, Data_Atualizacao) VALUES
-(1, 0, NOW()),
-(2, 0, NOW());
+(1, 10, NOW()),
+(2, 10, NOW());
+
+INSERT INTO CAIXAS (Caixa) VALUES
+('Caixa01'),
+('Caixa02');
