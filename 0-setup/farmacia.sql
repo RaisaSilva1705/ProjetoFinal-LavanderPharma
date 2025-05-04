@@ -278,30 +278,30 @@ CREATE TABLE IF NOT EXISTS `MOVIMENTACAO_ESTOQUE` (
 /* select * from MOVIMENTACAO_ESTOQUE; */
 
 -- -----------------------------------------------------
--- Table `CAIXAS_REGISTRADOS`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `CAIXAS_REGISTRADOS` (
-    `ID_CaixaRegistrado` INT AUTO_INCREMENT PRIMARY KEY,
-    `Nome_Caixa` VARCHAR(255) NOT NULL
-) ENGINE = InnoDB;
-/* drop table CAIXAS_REGISTRADOS; */
-/* select * from CAIXAS_REGISTRADOS; */
-
--- -----------------------------------------------------
 -- Table `CAIXAS`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `CAIXAS` (
     `ID_Caixa` INT AUTO_INCREMENT PRIMARY KEY,
-    `ID_CaixaRegistrado` INT NOT NULL,
+    `Caixa` VARCHAR(255) NOT NULL,
+    `Status` ENUM('Aberto', 'Fechado') NOT NULL DEFAULT 'Fechado'
+) ENGINE = InnoDB;
+/* drop table CAIXAS; */
+/* select * from CAIXAS; */
+
+-- -----------------------------------------------------
+-- Table `CAIXAS`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `CAIXAS_ABERTOS` (
+    `ID_CaixaAberto` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_Caixa` INT NOT NULL,
     `ID_Funcionario` INT NOT NULL,
     `Data_Abertura` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `Saldo_Inicial` DECIMAL(10,2) NOT NULL DEFAULT 0.00, 
     `Data_Fechamento` DATETIME DEFAULT NULL,
     `Saldo_Final` DECIMAL(10,2) DEFAULT NULL,
     `Valor_Vendido` DECIMAL(10,2) DEFAULT NULL,
-    `Status` ENUM('Aberto', 'Fechado') NOT NULL DEFAULT 'Aberto',
     FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`),
-    FOREIGN KEY (`ID_CaixaRegistrado`) REFERENCES `CAIXAS_REGISTRADOS` (`ID_CaixaRegistrado`)
+    FOREIGN KEY (`ID_Caixa`) REFERENCES `CAIXAS` (`ID_Caixa`)
 ) ENGINE = InnoDB;
 /* drop table CAIXAS; */
 /* select * from CAIXAS; */

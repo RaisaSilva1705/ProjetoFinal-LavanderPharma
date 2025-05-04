@@ -14,10 +14,11 @@ $conn->begin_transaction();
 
 try {
     // Insere a venda
+    $id_caixa = $_SESSION['ID_Caixa'];
     $vendedor = $_SESSION['ID_Funcionario'];
     $dataVenda = date("Y-m-d H:i:s");
 
-    $stmt = $conn->prepare("INSERT INTO VENDAS (ID_Funcionario, Data_Venda) VALUES (?, ?)");
+    $stmt = $conn->prepare("INSERT INTO VENDAS (ID_Funcionario, ID_Caixa Data_Venda) VALUES (?, ?)");
     $stmt->bind_param("is", $vendedor, $dataVenda);
     $stmt->execute();
 

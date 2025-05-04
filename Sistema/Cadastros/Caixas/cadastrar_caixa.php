@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nome_caixa = $_POST['nomeCaixa'];
 
     // Inserir os dados do caixa no banco de dados
-    $sql = "INSERT INTO CAIXAS_REGISTRADOS (Nome_Caixa) VALUES (?)";
+    $sql = "INSERT INTO CAIXAS (Caixa) VALUES (?)";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $nome_caixa);

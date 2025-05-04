@@ -11,7 +11,7 @@ include DEV_PATH . "Exec/validar_sessao.php";
 include DEV_PATH . "Exec/validar_acesso.php";
 
 // Busca caixas
-$sqlCaixas = "SELECT ID_CaixaRegistrado, Nome_Caixa FROM CAIXAS_REGISTRADOS";
+$sqlCaixas = "SELECT ID_Caixa, Caixa FROM CAIXAS";
 $caixas = $conn->query($sqlCaixas);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST'){
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
                         <select class="form-select" name="id_caixa" id="id_caixa" required>
                             <option value="">Selecione</option>
                             <?php while($caixa = $caixas->fetch_assoc()): ?>
-                                <option value="<?= $caixa['ID_CaixaRegistrado'] ?>"><?= $caixa['Nome_Caixa'] ?></option>
+                                <option value="<?= $caixa['ID_Caixa'] ?>"><?= $caixa['Caixa'] ?></option>
                             <?php endwhile; ?>
                         </select>
                     </div>

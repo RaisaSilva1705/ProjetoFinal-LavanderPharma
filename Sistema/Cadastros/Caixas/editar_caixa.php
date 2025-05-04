@@ -14,7 +14,7 @@ if (isset($_GET['codigo'])) {
     $codigo_caixa = $_GET['codigo'];
 
     // Consultar os dados do caixa no banco de dados
-    $sql = "SELECT * FROM CAIXAS_REGISTRADOS WHERE ID_CaixaRegistrado = ?";
+    $sql = "SELECT * FROM CAIXAS WHERE ID_Caixa = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $codigo_caixa);
     $stmt->execute();
@@ -39,9 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nome_caixa = $_POST['nomeCaixa'];
 
     // Atualizar os dados do caixa no banco de dados
-    $sql = "UPDATE CAIXAS_REGISTRADOS SET 
-                Nome_Caixa = ?
-            WHERE ID_CaixaRegistrado = ?";
+    $sql = "UPDATE CAIXAS SET 
+                Caixa = ?
+            WHERE ID_Caixa = ?";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("si", 
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <form action="#" method="POST">
                     <div class="mb-4">
                     <label for="nomeCaixa" class="form-label">Nome do Caixa</label>
-                    <input type="text" class="form-control" id="nomeCaixa" name="nomeCaixa" value="<?php echo htmlspecialchars($caixa['Nome_Caixa'] ?? ''); ?>" placeholder="Digite o nome do caixa" required>
+                    <input type="text" class="form-control" id="nomeCaixa" name="nomeCaixa" value="<?php echo htmlspecialchars($caixa['Caixa'] ?? ''); ?>" placeholder="Digite o nome do caixa" required>
                     </div>
 
                     <button type="submit" class="btn btn-primary mt-4">Editar Caixa</button>

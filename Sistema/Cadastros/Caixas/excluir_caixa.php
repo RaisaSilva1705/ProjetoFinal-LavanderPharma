@@ -14,7 +14,7 @@ if (isset($_GET['codigo'])) {
     $codigo_caixa = $_GET['codigo'];
 
     // Consultar os dados do caixa no banco de dados
-    $sql = "SELECT * FROM CAIXAS_REGISTRADOS WHERE ID_CaixaRegistrado = ?";
+    $sql = "SELECT * FROM CAIXAS WHERE ID_Caixa = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $codigo_caixa);
     $stmt->execute();
@@ -23,7 +23,7 @@ if (isset($_GET['codigo'])) {
     // Verificar se o caixa foi encontrado
     if ($result->num_rows > 0) {
         // Deletar os dados do caixa no banco de dados
-        $sql = "DELETE FROM CAIXAS_REGISTRADOS WHERE ID_CaixaRegistrado = ?";
+        $sql = "DELETE FROM CAIXAS WHERE ID_Caixa = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $codigo_caixa);
 

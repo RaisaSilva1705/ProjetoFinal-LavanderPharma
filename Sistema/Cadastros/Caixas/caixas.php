@@ -9,7 +9,7 @@ include DEV_PATH . 'Exec/conexao.php';
 include DEV_PATH . "Exec/validar_sessao.php";
 include DEV_PATH . "Exec/validar_acesso.php";
 
-$sql = "SELECT * FROM CAIXAS_REGISTRADOS";
+$sql = "SELECT * FROM CAIXAS";
 $result = $conn->query($sql);
 ?>
 
@@ -52,6 +52,7 @@ $result = $conn->query($sql);
                         <tr>
                             <th scope="col">ID</th>
                             <th scope="col">Caixa</th>
+                            <th scope="col">Status</th>
                             <th scope="col">Ações</th>
                         </tr>
                     </thead>
@@ -60,11 +61,12 @@ $result = $conn->query($sql);
                             if ($result->num_rows > 0) {
                                 while ($row = $result->fetch_assoc()) { // quebra de página após 20 resultados
                                     echo '<tr>';
-                                    echo '<td>' . $row["ID_CaixaRegistrado"] . '</td>';
-                                    echo '<td>' . $row["Nome_Caixa"] . '</td>';
+                                    echo '<td>' . $row["ID_Caixa"] . '</td>';
+                                    echo '<td>' . $row["Caixa"] . '</td>';
+                                    echo '<td>' . $row["Status"] . '</td>';
                                     echo '<td>
-                                            <a href="editar_caixa.php?codigo=' . $row["ID_CaixaRegistrado"] . '" class="btn btn-info btn-sm">Editar</a>
-                                            <a href="excluir_caixa.php?codigo=' . $row["ID_CaixaRegistrado"] . '" class="btn btn-danger btn-sm">Excluir</a>
+                                            <a href="editar_caixa.php?codigo=' . $row["ID_Caixa"] . '" class="btn btn-info btn-sm">Editar</a>
+                                            <a href="excluir_caixa.php?codigo=' . $row["ID_Caixa"] . '" class="btn btn-danger btn-sm">Excluir</a>
                                           </td>';
                                     echo '</tr>';
                                 }
