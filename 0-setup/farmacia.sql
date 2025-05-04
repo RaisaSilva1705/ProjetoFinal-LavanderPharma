@@ -199,6 +199,7 @@ CREATE TABLE IF NOT EXISTS `LOTES` (
     `ID_Produto` INT NOT NULL,
     `ID_Fornecedor` INT NOT NULL,
     `Quantidade` INT NOT NULL,
+    `Preco_Unitario` DECIMAL(10,2) NOT NULL,
     `Data_Validade` DATE NOT NULL,
     `Data_Entrada` DATE NOT NULL,
     FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
@@ -337,15 +338,15 @@ CREATE TABLE IF NOT EXISTS `FORMAS_PAGAMENTO` (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `VENDAS` (
     `ID_Venda` INT AUTO_INCREMENT PRIMARY KEY,
-    `ID_Cliente` INT NOT NULL,
     `ID_Funcionario` INT NOT NULL,
     `ID_Caixa` INT NOT NULL,
+    `ID_Cliente` INT DEFAULT NULL,
     `DataHora_Venda` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `Valor_Total` DECIMAL(10,2) NOT NULL,
     `Desconto` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    FOREIGN KEY (`ID_Cliente`) REFERENCES `CLIENTES` (`ID_Cliente`),
     FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`),
-    FOREIGN KEY (`ID_Caixa`) REFERENCES `CAIXAS` (`ID_Caixa`)
+    FOREIGN KEY (`ID_Caixa`) REFERENCES `CAIXAS` (`ID_Caixa`),
+    FOREIGN KEY (`ID_Cliente`) REFERENCES `CLIENTES` (`ID_Cliente`)
 ) ENGINE = InnoDB;
 /* drop table VENDAS; */
 /* select * from VENDAS; */

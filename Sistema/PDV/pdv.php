@@ -10,30 +10,68 @@ include DEV_PATH . 'Exec/conexao.php';
 include DEV_PATH . "Exec/validar_sessao.php";
 include DEV_PATH . "Exec/validar_acesso.php";
 
-// Simulação de produtos cadastrados
-$produtos = [
-    '123456' => ['nome' => 'Dipirona 500mg', 'valor' => 5.99, 'foto' => 'dipirona.jpg'],
-    '789101' => ['nome' => 'Paracetamol 750mg', 'valor' => 7.50, 'foto' => 'paracetamol.jpg'],
-];
+if (!isset($_SESSION['ID_Caixa'])){
+    header("Location: caixa_pdv.php");
+    exit();
+}
 
 // Inicializa o carrinho
 if (!isset($_SESSION['carrinho'])) $_SESSION['carrinho'] = [];
 
-// Adiciona item ao carrinho
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo'])) {
+// Adiciona item no carrinho
+if (isset($_POST['codigo'])) {
     $codigo = $_POST['codigo'];
-    $quantidade = max(1, intval($_POST['quantidade']));
 
-    if (isset($produtos[$codigo])) {
-        // Adiciona com quantidade personalizada
-        $_SESSION['carrinho'][] = [
-            'codigo' => $codigo,
-            'nome' => $produtos[$codigo]['nome'],
-            'valor' => $produtos[$codigo]['valor'],
-            'foto' => $produtos[$codigo]['foto'],
-            'quantidade' => $quantidade
+    $stmt = $conn->prepare("SELECT P.Nome, 
+                                   L.Preco_Unitario, 
+                                   P.Foto 
+                            FROM PRODUTOS P LEFT JOIN LOTES L 
+                                ON P.ID_Produto = L.ID_Produto
+                            WHERE EAN_GTIN = ?");
+    $stmt->bind_param("s", $codigo);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows > 0) {
+        $stmt->bind_result($nome, $preco, $foto);
+        $stmt->fetch();
+        $quantidade = max(1, intval($_POST['quantidade']));
+
+        $produtoEncontrado = false;
+
+        foreach ($_SESSION['carrinho'] as &$item) {
+            if ($item['codigo'] === $codigo) {
+                $item['quantidade'] += $quantidade;
+                $produtoEncontrado = true;
+                break;
+            }
+        }
+        unset($item); // evita problemas com referências
+
+        if (!$produtoEncontrado) {
+            $_SESSION['carrinho'][] = [
+                'codigo' => $codigo,
+                'nome' => $nome,
+                'preco' => $preco,
+                'foto' => $foto ?: 'sem-imagem.png',
+                'quantidade' => $quantidade
+            ];
+        }
+
+        // Salva info do último produto
+        $_SESSION['ultimo_produto'] = [
+            'descricao' => $nome,
+            'preco' => $preco,
+            'foto' => $foto
         ];
+
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    } 
+    else {
+        $_SESSION['msg'] = "<div class='alert alert-primary'>Produto não encontrado!</div>";
     }
+    $stmt->close();
 }
 
 // Remove item do carrinho
@@ -56,6 +94,7 @@ if (isset($_GET['remover'])) {
         <link rel="stylesheet" href="<?php echo DEV_URL ?>CSS/global.css">
     </head>
     <body class="bg-light">
+
         <div class="content">
             <!-- Banner -->
             <div class="container-fluid bg-secondary text-white text-center p-4">
@@ -63,7 +102,7 @@ if (isset($_GET['remover'])) {
                 <?php
                     // Verifica se $_SESSION["msg"] não é nulo e imprime a mensagem
                     if(isset($_SESSION["msg"]) && $_SESSION["msg"] != null){
-                        echo $_SESSION["msg"];
+                        echo "<script>alert('" . $_SESSION["msg"] . "');</script>";
                         // Limpa a mensagem para evitar que seja exibida novamente
                         $_SESSION["msg"] = null;
                     }
@@ -74,84 +113,143 @@ if (isset($_GET['remover'])) {
                 <!-- TOPO -->
                 <div class="row mb-3">
                     <div class="col-md-3">
+                        <?php 
+                            $sql = "SELECT COUNT(ID_Venda) + 1 AS num FROM VENDAS;";
+                            $result = $conn->query($sql);
+                            if ($result->num_rows > 0) {
+                                $temp = $result->fetch_assoc();
+                                $id_venda = $temp['num'];
+                            }
+                            else {
+                                $id_venda = 1;
+                            }
+                        ?>
                         <label>Nº Venda:</label>
-                        <input type="text" class="form-control" value="0001" readonly>
+                        <input type="text" class="form-control" value="<?php echo $id_venda ?>" readonly>
                     </div>
                     <div class="col-md-3">
                         <label>Data Venda:</label>
                         <input type="text" class="form-control" value="<?= date('d/m/Y H:i') ?>" readonly>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label>Cliente:</label>
                         <input type="text" class="form-control" placeholder="Consumidor Final">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Vendedor:</label>
+                        <input type="text" class="form-control" value="<?php echo $_SESSION['Nome'] ?>" readonly>
                     </div>
                 </div>
 
                 <!-- CENTRO -->
                 <div class="row mb-3">
                     <!-- COLUNA PRODUTO -->
-                    <div class="col-md-8 border p-2">
+                    <div class="col-md-7 border p-2">
                         <form action="#" method="POST">
-                            <div class="row mb-3">
-                                <div class="col-2">
-                                    <label for="quantidade">Qtd:</label>
-                                    <input type="number" id="quantidade" name="quantidade" class="form-control input-big" value="1" min="1">
-                                </div>
-                                <div class="col-7">
-                                    <label for="descricao">Descrição:</label>
-                                    <input type="text" id="descricao" name="descricao" class="form-control input-big" readonly value="Descrição do Produto">
-                                </div>
-                                <div class="col-2">
-                                    <label for="valor">Valor Unitário:</label>
-                                    <input type="text" id="valor" name="valor" class="form-control" value="R$ 0,00" readonly>
-                                </div>
-                            </div>
-
                             <div class="row">
-                                <div class="col-md-4 text-center">
-                                    <img src="imagens/sem-imagem.png" id="foto" name="foto" class="product-img mb-2" alt="Imagem da Embalagem do Produto">
+                                <!-- COLUNA IMAGEM -->
+                                <div class="col-md-5 m-3">
+                                    <div class="col-md-5 text-center">
+                                        <img src='<?php echo DEV_URL?>Imagens/sem-imagem.jpg' id="foto" name="foto" class="product-img mb-2" alt="Imagem da Embalagem do Produto" height="280px" width="280px">
+                                    </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="codigo">Código Barras:</label>
-                                    <input type="text" id="codigo" name="codigo" class="form-control">
-                                </div>
-                                <div class="col-md-4 mt-4" >
-                                    <button type="submit" class="btn btn-primary w-100">Adicionar</button>
+                                <!-- COLUNA INFO -->
+                                <div class="col-md-6 m-2 mt-4">
+                                    <div class="col-md-10">
+                                        <label for="descricao">Descrição:</label>
+                                        <input type="text" id="descricao" name="descricao" class="form-control input-big" readonly value="">
+                                    </div>
+                                    <div class="row mt-4">
+                                        <div class="col-5">
+                                            <label for="quantidade">Quantidade:</label>
+                                            <input type="number" id="quantidade" name="quantidade" class="form-control input-big" value="1" min="1">
+                                        </div>
+                                        <div class="col-5">
+                                            <label for="preco">Preço Unitário:</label>
+                                            <input type="text" id="preco" name="preco" class="form-control" value="R$ 0,00" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-4">
+                                        <div class="col-md-6">
+                                            <label for="codigo">Código Barras:</label>
+                                            <input type="text" id="codigo" name="codigo" class="form-control">
+                                        </div>
+                                        <div class="col-md-4 mt-4" >
+                                            <button type="submit" class="btn btn-primary w-100">Adicionar</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </form>
                     </div>
 
-                    <div class="col-md-4 border p-2">
+                    <div class="col-md-5 border p-2" style="height: 350px; overflow-y: auto;">
                         <!-- COLUNA VALORES/LOGO -->
-                        <h5>Carrinho:</h5>
-                        <table class="table table-bordered table-striped">
+                        <table class="table table-bordered table-striped table-sm mb-0">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Nome</th>
+                                    <th style="width: 200px;">Nome</th>
                                     <th>Valor</th>
                                     <th>Quant</th>
                                     <th>Total</th>
                                     <th>Ação</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody style="min-height: 240px;">
                                 <?php
-                                $totalGeral = 0;
-                                foreach ($_SESSION['carrinho'] as $index => $item):
-                                    $subtotal = $item['valor'] * $item['quantidade'];
-                                    $totalGeral += $subtotal;
+                                    $totalGeral = 0;
+                                    $totalItens = 0;
+                                    $linhasDesejadas = 8; // Número total de linhas que você quer
+                                    $linhasOcupadas = 0;
+
+                                    if (!empty($_SESSION['carrinho'])):
+                                        foreach ($_SESSION['carrinho'] as $index => $item):
+                                            $preco = ($item['preco'] == null) ?  0.00 : $item['preco'];
+                                            $subtotal = $preco * $item['quantidade'];
+                                            $totalGeral += $subtotal;
+                                            $totalItens += $item['quantidade'];
+                                            $linhasOcupadas++;
+                                    ?>
+                                    <tr>
+                                        <td><?= $item['nome'] ?></td>
+                                        <td>R$ <?= number_format($preco, 2, ',', '.') ?></td>
+                                        <td><?= $item['quantidade'] ?></td>
+                                        <td>R$ <?= number_format($subtotal, 2, ',', '.') ?></td>
+                                        <td>
+                                            <a href="?remover=<?= $index ?>" class="btn btn-sm btn-danger">Remover</a>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                        endforeach;
+
+                                        // Preenche o restante com linhas vazias
+                                        for ($i = 0; $i < $linhasDesejadas - $linhasOcupadas; $i++): ?>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                            </tr>
+                                    <?php endfor;
+
+                                    else: 
                                 ?>
                                 <tr>
-                                    <td><?= $item['nome'] ?></td>
-                                    <td>R$ <?= number_format($item['valor'], 2, ',', '.') ?></td>
-                                    <td><?= $item['quantidade'] ?></td>
-                                    <td>R$ <?= number_format($subtotal, 2, ',', '.') ?></td>
-                                    <td>
-                                        <a href="?remover=<?= $index ?>" class="btn btn-sm btn-danger">Remover</a>
-                                    </td>
+                                    <td colspan="5" class="text-center text-muted">Nenhum item adicionado ao carrinho</td>
                                 </tr>
-                                <?php endforeach; ?>
+                                <?php for ($i = 0; $i < $linhasDesejadas - 1; $i++): ?>
+                                    <tr>
+                                        <td>&nbsp;</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                <?php endfor; ?>
+                            <?php endif;
+
+                                ?>
                             </tbody>
                             <tfoot class="table-secondary">
                                 <tr>
@@ -166,44 +264,69 @@ if (isset($_GET['remover'])) {
                 <!-- RODAPÉ -->
                 <div class="row">
                     <div class="col-md-3">
-                    <label>Forma Pgto (1):</label>
-                    <input type="text" class="form-control" value="À VISTA">
+                        <label>Forma Pgto (1):</label>
+                        <input type="text" class="form-control" value="À VISTA">
                     </div>
                     <div class="col-md-3">
-                    <label>Valor:</label>
-                    <input type="text" class="form-control" value="R$ 0,00">
+                        <label>Valor:</label>
+                        <input type="text" class="form-control" value="R$ <?= number_format($totalGeral, 2, ',', '.') ?>">
                     </div>
                     <div class="col-md-3">
-                    <label>Forma Pgto (2):</label>
-                    <input type="text" class="form-control">
+                        <label>Forma Pgto (2):</label>
+                        <input type="text" class="form-control">
                     </div>
                     <div class="col-md-3">
-                    <label>Valor:</label>
-                    <input type="text" class="form-control">
+                        <label>Valor:</label>
+                        <input type="text" class="form-control">
                     </div>
                 </div>
 
                 <div class="row mt-3">
                     <div class="col-md-3">
-                    <label>Vendedor:</label>
-                    <input type="text" class="form-control" value="<?php echo $_SESSION['Nome'] ?>">
+                        <label>Total Bruto:</label>
+                        <input type="text" class="form-control" value="R$ <?= number_format($totalGeral, 2, ',', '.') ?>" readonly>
                     </div>
                     <div class="col-md-3">
-                    <label>Total Bruto:</label>
-                    <input type="text" class="form-control" value="R$ 0,00" readonly>
+                        <label>Qtd. Itens:</label>
+                        <input type="text" class="form-control" value="<?= $totalItens ?>" readonly>
                     </div>
-                    <div class="col-md-3">
-                    <label>Qtd. Itens:</label>
-                    <input type="text" class="form-control" value="0" readonly>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end justify-content-end gap-2">
-                    <button class="btn btn-secondary">Nova Venda</button>
-                    <button class="btn btn-success">Finalizar</button>
-                    <button class="btn btn-danger">Cancelar</button>
+                    <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
+                        <button class="btn btn-secondary">Nova Venda</button>
+                        <form action="finalizar_venda.php" method="POST">
+                            <button class="btn btn-success" type="submit">Finalizar</button>
+                        </form>
+                        <button class="btn btn-danger">Fechar Caixa</button>
                     </div>
                 </div>
 
             </div>
         </div>
+
+        <script>
+            document.getElementById('codigo').addEventListener('change', function () {
+                const codigo = this.value;
+
+                if (codigo.trim() === '') return;
+
+                fetch('../../Dev/Exec/busca_produto.php?codigo=' + encodeURIComponent(codigo))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('descricao').value = data.nome;
+                            document.getElementById('preco').value = "R$ " + parseFloat(data.preco).toFixed(2).replace('.', ',');
+                            document.getElementById('foto').src = '../../Dev/Imagens/' + data.foto;
+                        } else {
+                            alert(data.msg);
+                            document.getElementById('descricao').value = '';
+                            document.getElementById('preco').value = 'R$ 0,00';
+                            document.getElementById('foto').src = '../../Dev/Imagens/sem-imagem.jpg';
+                        }
+                    })
+                    .catch(err => {
+                        alert('Erro ao buscar produto.');
+                        console.error(err);
+                    });
+            });
+        </script>
     </body>
 </html>

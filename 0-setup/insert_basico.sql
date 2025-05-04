@@ -90,8 +90,7 @@ INSERT INTO CATEGORIAS_MEDICAMENTOS (Categoria_Med) VALUES
 ('Antiviral'),
 ('Ansiolítico'),
 ('Antipirético'),
-('Anti-hipertensivo'),
-('Polivitamínico');
+('Anti-hipertensivo');
 
 INSERT INTO UNIDADES (Unidade, Abreviacao, Tipo) VALUES
 ('Caixa', 'cx', 'Contagem'),

@@ -24,8 +24,6 @@ $sql = "SELECT
         LEFT JOIN ESTOQUE E
             ON E.ID_Produto = P.ID_Produto";
 $result = $conn->query($sql);
-
-
 ?>
 
 <!DOCTYPE html>
@@ -39,7 +37,7 @@ $result = $conn->query($sql);
         <link rel="stylesheet" href="<?php echo DEV_URL ?>CSS/global.css">
     </head>
     <body class="bg-light">
-        <!-- Navbar -->
+        <!-- Sidebar -->
         <?php include_once DEV_PATH . 'Views/sidebar.php'?>
 
         <div class="content">
