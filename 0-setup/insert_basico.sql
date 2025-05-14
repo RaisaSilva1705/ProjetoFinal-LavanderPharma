@@ -104,9 +104,13 @@ INSERT INTO PRODUTOS (ID_Categoria, Nome, Marca, ID_Unidade, NCM, EAN_GTIN) VALU
 INSERT INTO MEDICAMENTOS (ID_Produto, ID_CategoriaMed, ID_Tarja, Tipo, Prin_Ativo) VALUES
 (1, 2, 1, 'Genérico', 'Paracetamol');
 
-INSERT INTO ESTOQUE (ID_Produto, Quantidade, Data_Atualizacao) VALUES
-(1, 10, NOW()),
-(2, 10, NOW());
+INSERT INTO LOTES (Lote_Nome, ID_Produto, Preco_Unitario, Data_Validade) VALUES
+('L202505A', 1, 4.50, '2025-12-31'),
+('L202506B', 2, 22.90, '2026-01-15');
+
+INSERT INTO ESTOQUE (ID_Produto, Quantidade, ID_Lote, Preco_Atual, Data_Entrada, Data_Atualizacao) VALUES
+(1, 100, 1, 4.50, NOW(), NOW()),
+(2, 50, 2, 22.90, NOW(), NOW());
 
 INSERT INTO CAIXAS (Caixa) VALUES
 ('Caixa01'),

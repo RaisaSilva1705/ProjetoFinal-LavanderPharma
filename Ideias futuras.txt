@@ -24,6 +24,9 @@ RELATÓRIOS
 PRODUTO
 1- unidades
 
+CAIXA
+1- Adicionar outra forma de pesquisa de produto (caso o código de barras não funcione)
+
 
 
 

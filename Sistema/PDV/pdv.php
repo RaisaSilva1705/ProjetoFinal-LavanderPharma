@@ -15,10 +15,16 @@ if (!isset($_SESSION['ID_Caixa'])){
     exit();
 }
 
-if (isset($_POST['nova_venda'])) {
+if (isset($_POST['cancelar_venda'])) {
     unset($_SESSION['carrinho']);
     unset($_SESSION['ultimo_produto']);
     header("Location: pdv.php");
+    exit;
+}
+
+if ($preco === null || $preco <= 0) {
+    $_SESSION['msg'] = "<div class='alert alert-danger'>Produto sem preço definido!</div>";
+    header("Location: " . $_SERVER['PHP_SELF']);
     exit;
 }
 
@@ -79,6 +85,11 @@ if (isset($_POST['codigo'])) {
         $_SESSION['msg'] = "<div class='alert alert-primary'>Produto não encontrado!</div>";
     }
     $stmt->close();
+}
+else {
+    $_SESSION['msg'] = "<div class='alert alert-warning'>Informe o código de barras do produto.</div>";
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
 }
 
 // Remove item do carrinho
@@ -309,8 +320,8 @@ if (isset($_GET['remover'])) {
                     </div>
                     <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
                         <form action="pdv.php" method="POST">
-                            <input type="hidden" name="nova_venda" value="1">
-                            <button class="btn btn-secondary" type="submit">Nova Venda</button>
+                            <input type="hidden" name="cancelar_venda" value="1">
+                            <button class="btn btn-secondary" type="submit">Cancelar Venda</button>
                         </form>
 
                         <form action="finalizarvenda_pdv.php" method="POST">
@@ -320,7 +331,12 @@ if (isset($_GET['remover'])) {
                             <input type="hidden" name="desconto" value="<?= $desconto = 0.00 ?>">
                             <button class="btn btn-success" type="submit">Finalizar</button>
                         </form>
-                        <button class="btn btn-danger">Fechar Caixa</button>
+
+                        <form action="finalizarcaixa_pdv.php" method="POST">
+                            <input type="hidden" name="finalizar_caixa" value="1">
+                            <button class="btn btn-danger" type="submit">Fechar Caixa</button>
+                        </form>
+                        
                     </div>
                 </div>
 

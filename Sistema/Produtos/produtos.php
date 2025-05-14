@@ -12,13 +12,11 @@ include DEV_PATH . "Exec/validar_acesso.php";
 $sql = "SELECT
             P.ID_Produto,
             P.Nome,
-            P.Marca,
-            HP.Preco,
+            P.ID_Fornecedor,
+            E.Preco_Atual,
             C.Categoria,
             E.Quantidade
         FROM PRODUTOS P 
-        LEFT JOIN HISTORICO_PRECOS HP 
-            ON P.ID_Produto = HP.ID_Produto
         LEFT JOIN CATEGORIAS C
             ON C.ID_Categoria = P.ID_Categoria
         LEFT JOIN ESTOQUE E
@@ -76,11 +74,12 @@ $result = $conn->query($sql);
                         <?php
                             if ($result->num_rows > 0) {
                                 while ($row = $result->fetch_assoc()) { // quebra de página após 20 resultados
-                                    $preco = ($row['Preco'] == null) ?  0.00 : $row['Preco']; 
+                                    $preco = ($row['Preco_Atual'] == null) ?  0.00 : $row['Preco_Atual']; 
+                                    $fornecedor = ($row['ID_Fornecedor'] == null) ?  '' : $row['ID_Fornecedor'];
                                     echo '<tr>';
                                         echo '<td>' . $row["ID_Produto"] . '</td>';
                                         echo '<td>' . $row["Nome"] . '</td>';
-                                        echo '<td>' . $row["Marca"] . '</td>';
+                                        echo '<td>' . $fornecedor . '</td>';
                                         echo '<td>' . $row["Categoria"] . '</td>';
                                         echo '<td>' . $row["Quantidade"] . '</td>';
                                         echo '<td> R$ ' . $preco . '</td>';
@@ -96,7 +95,8 @@ $result = $conn->query($sql);
                     </tbody>
                 </table>
             </div>
+            <!-- Footer -->
+            <?php include_once DEV_PATH . 'Views/footer.php'?>
         </div>
-
     </body>
 </html>

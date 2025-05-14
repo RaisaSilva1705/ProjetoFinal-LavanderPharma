@@ -12,7 +12,8 @@ include DEV_PATH . "Exec/validar_acesso.php";
 
 // Busca caixas
 $sqlCaixas = "SELECT ID_Caixa,
-                     Caixa
+                     Caixa,
+                     Status
               FROM CAIXAS";
 $caixas = $conn->query($sqlCaixas);
 
@@ -33,13 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $caixa = $resultStatus->fetch_assoc();
 
     if($caixa['Status'] == 'Fechado'){
-        $status = 'Aberto';
 
         $sql ="UPDATE CAIXAS SET
-                Status = ?
+                Status = 'Aberto'
                WHERE ID_Caixa = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("si", $status, $id_caixa);
+        $stmt->bind_param("i", $id_caixa);
         
         if ($stmt->execute()){
             $sql ="INSERT INTO CAIXAS_ABERTOS 
@@ -50,7 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
             $stmt->bind_param("iid", $id_caixa, $id_funcionario, $saldoInicial);
             $stmt->execute();
 
+            $_SESSION['ID_CaixaAberto'] = $stmt->insert_id;
             $_SESSION['ID_Caixa'] = $id_caixa;
+            $_SESSION['Saldo_Inicial'] = $saldoInicial;
             header("Location: pdv.php");
             exit();
         }
@@ -123,6 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
                     <button type="submit" class="btn btn-primary mt-4">Abrir Caixa</button>
                 </form>
             </div>
+            <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+            <!-- Footer -->
+            <?php include_once DEV_PATH . 'Views/footer.php'?>
         </div>
     </body>
 </html>

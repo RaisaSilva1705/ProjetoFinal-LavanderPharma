@@ -74,13 +74,18 @@ $result = $conn->query($sql);
                         <?php
                         if ($result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) { // quebra de página após 20 resultados
+                                if($row["Quantidade"] <= $row["Quant_Minima"]){
+                                    $class = ($row["Quantidade"] == $row["Quant_Minima"]) ? "table-warning" : "table-danger";
+                                }
+                                else $class = "table-success";
+
                                 echo '<tr>';
                                 echo '<td>' . $row["Nome"] . '</td>';
                                 echo '<td>' . $row["Categoria"] . '</td>';
-                                echo '<td>' . $row["Quantidade"] . '</td>';
+                                echo '<td class="' . $class . '">' . $row["Quantidade"] . '</td>';
                                 echo '<td>' . $row["Quant_Minima"] . '</td>';
                                 echo '<td>
-                                        <a href="movimentacao_estoque.php?mov=E&codigo=' . $row['ID_Produto'] . '" class="btn btn-info btn-sm">Entrada</a>
+                                        <a href="movimentacao_estoque.php?mov=E&codigo=' . $row['ID_Produto'] . '" class="btn btn-primary btn-sm">Entrada</a>
                                         <a href="movimentacao_estoque.php?mov=S&codigo=' . $row['ID_Produto'] . '" class="btn btn-danger btn-sm">Saída</a>
                                     </td>';
                                 echo '</tr>';

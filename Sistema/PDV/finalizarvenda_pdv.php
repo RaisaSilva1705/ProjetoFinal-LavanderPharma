@@ -15,17 +15,17 @@ $conn->begin_transaction();
 try {
     // Insere a venda
     $id_funcionario = $_SESSION['ID_Funcionario'];
-    $id_caixa = $_SESSION['ID_Caixa'];
+    $id_caixaAberto = $_SESSION['ID_CaixaAberto'];
     $id_cliente = $_POST['id_cliente'] ?? null;
     $valorTotal = $_POST['valor_total'];
     $desconto = $_POST['desconto'] ?? 0.00;
 
     $stmt = $conn->prepare("INSERT INTO VENDAS 
-                                (ID_Funcionario, ID_Caixa, 
+                                (ID_Funcionario, ID_CaixaAberto, 
                                 ID_Cliente, DataHora_Venda, 
                                 Valor_Total, Desconto) 
                             VALUES (?, ?, ?, NOW(), ?, ?)");
-    $stmt->bind_param("iiidd", $id_funcionario, $id_caixa, $id_cliente, $valorTotal, $desconto);
+    $stmt->bind_param("iiidd", $id_funcionario, $id_caixaAberto, $id_cliente, $valorTotal, $desconto);
     $stmt->execute();
 
     $idVenda = $stmt->insert_id;

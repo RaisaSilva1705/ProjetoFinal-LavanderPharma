@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS `FUNCIONARIOS` (
     `Status` ENUM('Ativo', 'Inativo') DEFAULT 'Ativo',
     `OBS` TEXT DEFAULT NULL,
     `Data_Cadastro` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `Data_Alteracao` DATETIME DEFAULT NULL,
+    `Data_Alteracao` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`ID_Cargo`) REFERENCES `CARGOS_FUNCIONARIOS` (`ID_Cargo`)
 ) ENGINE = InnoDB;
 /* drop table FUNCIONARIOS; */
@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS `PRODUTOS` (
     `ID_Produto` INT AUTO_INCREMENT PRIMARY KEY,
     `ID_Categoria` INT NOT NULL,
     `Nome` VARCHAR(255) NOT NULL,
-    `Marca` VARCHAR(255) NOT NULL,
+    `ID_Fornecedor` INT DEFAULT NULL,
     `Descricao` VARCHAR(255) DEFAULT NULL,
     `ID_Unidade` INT NOT NULL,
     `Quant_Minima` INT DEFAULT 10, 
@@ -186,7 +186,8 @@ CREATE TABLE IF NOT EXISTS `PRODUTOS` (
     `NFCI` VARCHAR(20) DEFAULT NULL,
     `Foto` VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (`ID_Categoria`) REFERENCES `CATEGORIAS` (`ID_Categoria`),
-    FOREIGN KEY (`ID_Unidade`) REFERENCES `UNIDADES` (`ID_Unidade`)
+    FOREIGN KEY (`ID_Unidade`) REFERENCES `UNIDADES` (`ID_Unidade`),
+    FOREIGN KEY (`ID_Fornecedor`) REFERENCES `FORNECEDORES` (`ID_Fornecedor`)
 ) ENGINE = InnoDB;
 /* drop table PRODUTOS; */
 /* select * from PRODUTOS; */
@@ -198,11 +199,9 @@ CREATE TABLE IF NOT EXISTS `LOTES` (
     `ID_Lote` INT AUTO_INCREMENT PRIMARY KEY,
     `Nome_Lote` VARCHAR(255) NOT NULL,
     `ID_Produto` INT NOT NULL,
-    `ID_Fornecedor` INT NOT NULL,
-    `Quantidade` INT NOT NULL,
+    `ID_Fornecedor` INT DEFAULT NULL,
     `Preco_Unitario` DECIMAL(10,2) NOT NULL,
     `Data_Validade` DATE NOT NULL,
-    `Data_Entrada` DATE NOT NULL,
     FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
     FOREIGN KEY (`ID_Fornecedor`) REFERENCES `FORNECEDORES` (`ID_Fornecedor`)
 ) ENGINE = InnoDB;
@@ -253,8 +252,12 @@ CREATE TABLE IF NOT EXISTS `ESTOQUE` (
     `ID_Estoque` INT AUTO_INCREMENT PRIMARY KEY,
     `ID_Produto` INT NOT NULL,
     `Quantidade` INT NOT NULL,
+    `ID_Lote` INT NOT NULL,
+    `Preco_Atual` DECIMAL(10,2) NOT NULL,
+    `Data_Entrada` DATE NOT NULL,
     `Data_Atualizacao` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`)
+    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
+    FOREIGN KEY (`ID_Lote`) REFERENCES `LOTES` (`ID_Lote`)
 ) ENGINE = InnoDB;
 /* drop table ESTOQUE; */
 /* select * from ESTOQUE; */
@@ -290,7 +293,7 @@ CREATE TABLE IF NOT EXISTS `CAIXAS` (
 /* select * from CAIXAS; */
 
 -- -----------------------------------------------------
--- Table `CAIXAS`
+-- Table `CAIXAS_ABERTOS`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `CAIXAS_ABERTOS` (
     `ID_CaixaAberto` INT AUTO_INCREMENT PRIMARY KEY,
@@ -304,8 +307,8 @@ CREATE TABLE IF NOT EXISTS `CAIXAS_ABERTOS` (
     FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`),
     FOREIGN KEY (`ID_Caixa`) REFERENCES `CAIXAS` (`ID_Caixa`)
 ) ENGINE = InnoDB;
-/* drop table CAIXAS; */
-/* select * from CAIXAS; */
+/* drop table CAIXAS_ABERTOS; */
+/* select * from CAIXAS_ABERTOS; */
 
 -- -----------------------------------------------------
 -- Table `MOVIMENTACOES_CAIXA`
@@ -340,13 +343,13 @@ CREATE TABLE IF NOT EXISTS `FORMAS_PAGAMENTO` (
 CREATE TABLE IF NOT EXISTS `VENDAS` (
     `ID_Venda` INT AUTO_INCREMENT PRIMARY KEY,
     `ID_Funcionario` INT NOT NULL,
-    `ID_Caixa` INT NOT NULL,
+    `ID_CaixaAberto` INT NOT NULL,
     `ID_Cliente` INT DEFAULT NULL,
     `DataHora_Venda` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `Valor_Total` DECIMAL(10,2) NOT NULL,
     `Desconto` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`),
-    FOREIGN KEY (`ID_Caixa`) REFERENCES `CAIXAS` (`ID_Caixa`),
+    FOREIGN KEY (`ID_CaixaAberto`) REFERENCES `CAIXAS_ABERTOS` (`ID_CaixaAberto`),
     FOREIGN KEY (`ID_Cliente`) REFERENCES `CLIENTES` (`ID_Cliente`)
 ) ENGINE = InnoDB;
 /* drop table VENDAS; */
