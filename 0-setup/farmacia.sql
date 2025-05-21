@@ -199,11 +199,9 @@ CREATE TABLE IF NOT EXISTS `LOTES` (
     `ID_Lote` INT AUTO_INCREMENT PRIMARY KEY,
     `Nome_Lote` VARCHAR(255) NOT NULL,
     `ID_Produto` INT NOT NULL,
-    `ID_Fornecedor` INT DEFAULT NULL,
     `Preco_Unitario` DECIMAL(10,2) NOT NULL,
     `Data_Validade` DATE NOT NULL,
-    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
-    FOREIGN KEY (`ID_Fornecedor`) REFERENCES `FORNECEDORES` (`ID_Fornecedor`)
+    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`)
 ) ENGINE = InnoDB;
 /* drop table LOTES; */
 /* select * from LOTES; */
@@ -250,9 +248,9 @@ CREATE TABLE IF NOT EXISTS `MEDICAMENTOS` (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `ESTOQUE` (
     `ID_Estoque` INT AUTO_INCREMENT PRIMARY KEY,
-    `ID_Produto` INT NOT NULL,
-    `Quantidade` INT NOT NULL,
+    `ID_Produto` INT NOT NULL, -- tirar futuramente
     `ID_Lote` INT NOT NULL,
+    `Quantidade` INT NOT NULL,
     `Preco_Atual` DECIMAL(10,2) NOT NULL,
     `Data_Entrada` DATE NOT NULL,
     `Data_Atualizacao` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -261,25 +259,6 @@ CREATE TABLE IF NOT EXISTS `ESTOQUE` (
 ) ENGINE = InnoDB;
 /* drop table ESTOQUE; */
 /* select * from ESTOQUE; */
-
--- -----------------------------------------------------
--- Table `MOVIMENTACAO_ESTOQUE`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `MOVIMENTACAO_ESTOQUE` (
-    `ID_Movimentacao` INT AUTO_INCREMENT PRIMARY KEY,
-    `ID_Produto` INT NOT NULL,
-    `ID_Funcionario` INT NOT NULL,
-    `Tipo` ENUM('Entrada', 'Saída') NOT NULL,
-    `Antiga_Quantidade` INT NOT NULL,
-    `Nova_Quantidade` INT NOT NULL,
-    `ID_Lote` INT DEFAULT NULL,
-    `Data_Movimentacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
-    FOREIGN KEY (`ID_Lote`) REFERENCES `LOTES` (`ID_Lote`),
-    FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`)
-) ENGINE = InnoDB;
-/* drop table MOVIMENTACAO_ESTOQUE; */
-/* select * from MOVIMENTACAO_ESTOQUE; */
 
 -- -----------------------------------------------------
 -- Table `CAIXAS`
@@ -356,19 +335,39 @@ CREATE TABLE IF NOT EXISTS `VENDAS` (
 /* select * from VENDAS; */
 
 -- -----------------------------------------------------
--- Table `PAGAMENTOS`
+-- Table `MOVIMENTACAO_ESTOQUE`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `PAGAMENTOS` (
-    `ID_Pagamento` INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS `MOVIMENTACAO_ESTOQUE` (
+    `ID_Movimentacao` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_Produto` INT NOT NULL,
+    `ID_Funcionario` INT NOT NULL,
+    `Tipo` ENUM('Entrada', 'Saída') NOT NULL,
+    `Quantidade` INT NOT NULL,
+    `ID_Venda` INT DEFAULT NULL,
+    `Data_Movimentacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `OBS` VARCHAR(255) DEFAULT NULL,
+    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
+    FOREIGN KEY (`ID_Venda`) REFERENCES `VENDAS` (`ID_Venda`),
+    FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`)
+) ENGINE = InnoDB;
+/* drop table MOVIMENTACAO_ESTOQUE; */
+/* select * from MOVIMENTACAO_ESTOQUE; */
+
+-- -----------------------------------------------------
+-- Table `VENDA_PAGAMENTOS`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `VENDA_PAGAMENTOS` (
+    `ID_VendaPagamento` INT AUTO_INCREMENT PRIMARY KEY,
     `ID_Venda` INT NOT NULL,
     `ID_Forma_Pag` INT NOT NULL,
     `Valor` DECIMAL(10,2) NOT NULL,
     `Quant_Vezes` INT NOT NULL DEFAULT 1,
+    `Data_Pagamento` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`ID_Venda`) REFERENCES `VENDAS` (`ID_Venda`),
     FOREIGN KEY (`ID_Forma_Pag`) REFERENCES `FORMAS_PAGAMENTO` (`ID_Forma_Pag`)
 ) ENGINE = InnoDB;
-/* drop table PAGAMENTOS; */
-/* select * from PAGAMENTOS; */ 
+/* drop table VENDA_PAGAMENTOS; */
+/* select * from VENDA_PAGAMENTOS; */ 
 
 -- -----------------------------------------------------
 -- Table `ITENS_VENDA`

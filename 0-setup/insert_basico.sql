@@ -97,21 +97,24 @@ INSERT INTO UNIDADES (Unidade, Abreviacao, Tipo) VALUES
 ('Comprimido', 'cp', 'Contagem'),
 ('Frasco', 'fr', 'Volume');
 
-INSERT INTO PRODUTOS (ID_Categoria, Nome, Marca, ID_Unidade, NCM, EAN_GTIN) VALUES
-(1, 'Paracetamol 750mg 20cp', 'Medley', 2, '30049099', '7896422500080'),
-(9, 'Creme Hidratante Neutrogena 200ml', 'Neutrogena', 3, '33049990', '7891010246124');
+INSERT INTO PRODUTOS (ID_Categoria, Nome, ID_Unidade, NCM, EAN_GTIN) VALUES
+(1, 'Paracetamol 750mg 20cp', 2, '30049099', '7896422500080'),
+(9, 'Creme Hidratante Neutrogena 200ml', 3, '33049990', '7891010246124');
 
 INSERT INTO MEDICAMENTOS (ID_Produto, ID_CategoriaMed, ID_Tarja, Tipo, Prin_Ativo) VALUES
 (1, 2, 1, 'Genérico', 'Paracetamol');
 
-INSERT INTO LOTES (Lote_Nome, ID_Produto, Preco_Unitario, Data_Validade) VALUES
+INSERT INTO LOTES (Nome_Lote, ID_Produto, Preco_Unitario, Data_Validade) VALUES
 ('L202505A', 1, 4.50, '2025-12-31'),
 ('L202506B', 2, 22.90, '2026-01-15');
 
-INSERT INTO ESTOQUE (ID_Produto, Quantidade, ID_Lote, Preco_Atual, Data_Entrada, Data_Atualizacao) VALUES
-(1, 100, 1, 4.50, NOW(), NOW()),
-(2, 50, 2, 22.90, NOW(), NOW());
+INSERT INTO ESTOQUE (ID_Produto, ID_Lote, Quantidade, Preco_Atual, Data_Entrada, Data_Atualizacao) VALUES
+(1, 1, 100, 4.50, NOW(), NOW()),
+(2, 2, 50, 22.90, NOW(), NOW());
 
 INSERT INTO CAIXAS (Caixa) VALUES
 ('Caixa01'),
 ('Caixa02');
+
+INSERT INTO FORMAS_PAGAMENTO (Tipo) VALUES
+('Dinheiro'), ('Cartão de Crédito'), ('Cartão de Débito'), ('PIX');

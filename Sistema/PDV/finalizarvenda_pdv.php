@@ -34,6 +34,14 @@ try {
     $stmtItem = $conn->prepare("INSERT INTO ITENS_VENDA (ID_Venda, ID_Produto, Quantidade, Valor_Total) 
                                 VALUES (?, ?, ?, ?)");
 
+    // Atualiza estoque por lote (baixa inteligente)
+    $stmtLotes = $conn->prepare("SELECT E.ID_Estoque, E.Quantidade, L.Data_Validade 
+                                FROM ESTOQUE E LEFT JOIN LOTES L 
+                                    ON E.ID_Lote = L.ID_Lote 
+                                WHERE E.ID_Produto = ? AND E.Quantidade > 0 
+                                ORDER BY L.Data_Validade ASC, E.Data_Entrada ASC");
+    $stmtUpdateLote = $conn->prepare("UPDATE ESTOQUE SET Quantidade = Quantidade - ? WHERE ID_Estoque = ?");
+
     foreach ($_SESSION['carrinho'] as $item) {
         $codigo = $item['codigo'];
 
@@ -48,15 +56,48 @@ try {
         $preco = $item['preco'];
         $valor_total = $preco * $quantidade;
 
-        $stmtItem->bind_param("isid", $idVenda, $id_produto, $quantidade, $valor_total);
+        $stmtItem->bind_param("iiid", $idVenda, $id_produto, $quantidade, $valor_total);
         $stmtItem->execute();
 
-        // Atualiza estoque (baixa)
-        $stmtEstoque = $conn->prepare("UPDATE ESTOQUE 
-                                        SET Quantidade = Quantidade - ? 
-                                       WHERE ID_Produto = ?");
-        $stmtEstoque->bind_param("is", $quantidade, $id_produto);
-        $stmtEstoque->execute();
+        // Atualiza estoque por lote (baixa)
+        //$stmtEstoque = $conn->prepare("UPDATE ESTOQUE SET Quantidade = Quantidade - ? WHERE ID_Produto = ?");
+        //$stmtEstoque->bind_param("is", $quantidade, $id_produto);
+        //$stmtEstoque->execute();
+
+        // Atualizar estoque por lote
+        $stmtLotes->bind_param("i", $id_produto);
+        $stmtLotes->execute();
+        $lotes = $stmtLotes->get_result();
+
+        $stmtMov = $conn->prepare("INSERT INTO MOVIMENTACAO_ESTOQUE 
+                                      (ID_Estoque, ID_Produto, Tipo, Quantidade, ID_Venda) 
+                                      VALUES (?, ?, 'SAIDA', ?, ?)");
+
+        $qtdRestante = $quantidade;
+
+        while ($qtdRestante > 0 && ($lote = $lotes->fetch_assoc())) {
+            $id_estoque = $lote['ID_Estoque'];
+            $qtd_disponivel = $lote['Quantidade'];
+
+            if ($qtd_disponivel >= $qtdRestante) {
+                $qtd_a_retirar = $qtdRestante;
+                $qtdRestante = 0;
+            } else {
+                $qtd_a_retirar = $qtd_disponivel;
+                $qtdRestante -= $qtd_disponivel;
+            }
+
+            $stmtUpdateLote->bind_param("ii", $qtd_a_retirar, $id_estoque);
+            $stmtUpdateLote->execute();
+
+            $stmtMov->bind_param("iiii", $id_estoque, $id_produto, $qtd_a_retirar, $idVenda);
+            $stmtMov->execute();
+
+        }
+
+        if ($qtdRestante > 0) {
+            throw new Exception("Estoque insuficiente por lote para o produto $codigo");
+        }
     }
 
     $conn->commit();
