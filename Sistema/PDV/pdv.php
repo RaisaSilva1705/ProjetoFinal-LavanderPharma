@@ -150,7 +150,7 @@ if (isset($_GET['remover'])) {
                     </div>
                     <div class="col-md-3">
                         <?php 
-                            // Busca caixas
+                            // Busca clientes
                             $sqlCli = "SELECT ID_Cliente, Nome FROM CLIENTES";
                             $clientes = $conn->query($sqlCli);
                         ?>
@@ -158,7 +158,7 @@ if (isset($_GET['remover'])) {
                         <select class="form-select" name="id_cliente" id="id_cliente" required>
                             <option value="">Selecione</option>
                             <?php while($cliente = $clientes->fetch_assoc()): ?>
-                                <option value="<?= $cliente['ID_Cliente'] ?>"><?= $cliente['Nome'] ?></option>
+                                <option value="<?= $cliente['ID_Cliente'] ?>"><?= htmlspecialchars($cliente['Nome']) ?></option>
                             <?php endwhile; ?>
                         </select>
                     </div>
@@ -238,7 +238,7 @@ if (isset($_GET['remover'])) {
                                             $linhasOcupadas++;
                                     ?>
                                     <tr>
-                                        <td><?= $item['nome'] ?></td>
+                                        <td><?= htmlspecialchars($item['nome']) ?></td>
                                         <td>R$ <?= number_format($preco, 2, ',', '.') ?></td>
                                         <td><?= $item['quantidade'] ?></td>
                                         <td>R$ <?= number_format($subtotal, 2, ',', '.') ?></td>
@@ -341,42 +341,38 @@ if (isset($_GET['remover'])) {
             <div class="modal fade modal-lg" id="popupPagamento" tabindex="-1" aria-labelledby="popupPagamentoLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Formas de Pagamento</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <?php 
-                            // Busca formas de pagamento cadastradas
-                            $sqlFoPags = "SELECT ID_Forma_Pag, Tipo FROM FORMAS_PAGAMENTO";
-                            $foPags = $conn->query($sqlFoPags);
-                        ?>
-                        <?php while($foPag = $foPags->fetch_assoc()): ?>
-                            <div class="mb-3 row">
-                                <label class="col-sm-4 col-form-label"><?= $foPag['ID_Forma_Pag']; ?> - <?= $foPag['Tipo']; ?></label>
-                                <div class="col-sm-8">
-                                    <input type="text" class="form-control forma" data-id="<?= $foPag['ID_Forma_Pag'] ?>">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Formas de Pagamento</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <?php 
+                                // Busca formas de pagamento cadastradas
+                                $sqlFoPags = "SELECT ID_Forma_Pag, Tipo FROM FORMAS_PAGAMENTO";
+                                $foPags = $conn->query($sqlFoPags);
+                            ?>
+                            <?php while($foPag = $foPags->fetch_assoc()): ?>
+                                <div class="mb-3 row">
+                                    <label class="col-sm-4 col-form-label"><?= $foPag['ID_Forma_Pag']; ?> - <?= $foPag['Tipo']; ?></label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control forma" data-id="<?= $foPag['ID_Forma_Pag'] ?>">
+                                    </div>
                                 </div>
-                            </div>
-                        <?php endwhile; ?>
+                            <?php endwhile; ?>
 
-                        <div class="text-end fw-bold mt-3" id="troco">Troco: R$ 0,00</div>
-                    </div>
-                    
-                    <div class="modal-footer">
-                        <form action="finalizarvenda_pdv.php" method="POST">
-                            <input type="hidden" name="valor_total" value="<?= $totalGeral ?>">
-                            <input type="hidden" name="total_itens" value="<?= $totalItens ?>">
+                            <div class="text-end fw-bold mt-3" id="troco">Troco: R$ 0,00</div>
+                        </div>
+                        
+                        <div class="modal-footer">
                             <input type="hidden" name="id_cliente_hidden" id="id_cliente_hidden" value="">
-                            <input type="hidden" name="desconto" value="<?= $desconto = 0.00 ?>">
-                            <button class="btn btn-success w-100" type="submit">Confirmar Pagamento</button>
-                        </form>
+                            <button class="btn btn-success w-100" id="confirmarPagamento" type="submit">Confirmar Pagamento</button>
+                            <div id="card-errors"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
         </div>
-        
         
 
         <script> // atualização automática dos valores 
@@ -406,17 +402,80 @@ if (isset($_GET['remover'])) {
                     });
             });
 
-            // ATUALIZA HIDDEN INPUT APÓS SELECIONAR CLIENTE
-            document.getElementById('id_cliente').addEventListener('change', function () {
-                const hiddenCliente = document.getElementById('id_cliente_hidden');
-                hiddenCliente.value = this.value;
+            // Confirmação de pagamento com STRIPE
+            document.getElementById('confirmarPagamento').addEventListener('click', async function(event){
+                event.preventDefault();
+
+                const formas_pagamento = [];
+                document.querySelectorAll('.forma').forEach(function(input){
+                    const valor = parseFloat(input.value.replace(',', '.'));
+                    if (!isNaN(valor) && valor > 0) {
+                        formas_pagamento.push({
+                            id_forma_pag: parseInt(input.dataset.id),
+                            valor: valor,
+                            quant_vezes: 1 // fixo por enquanto
+                        });
+                    }
+                });
+
+                let erroPagamento = false;
+
+                for (let forma of formas_pagamento) {
+                    if (forma.id_forma_pag === 2 || forma.id_forma_pag === 3) {  // Crédito ou Débito
+                        const response = await fetch('http://localhost/htdocs/Farmácia/Dev/Exec/stripe_pagamento.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                valor: forma.valor
+                            })
+                        });
+
+                        const result = await response.json();
+                        // console.log(result);
+
+                        if (!result.sucesso) {
+                            document.getElementById('card-errors').textContent = 'Erro no pagamento: ' + result.mensagem;
+                            erroPagamento = true;
+                            break;  // Cancela, não grava no banco
+                        }
+                    }
+                }
+
+                if (!erroPagamento) {
+                    enviarJson(formas_pagamento);
+                }
             });
 
-            // Atualiza na carga inicial também (caso já tenha valor selecionado)
-            hiddenCliente.value = document.getElementById('id_cliente').value;
+            // APÓS CONFIRMAR PAGAMENTO, MONTA JSON E ENVIA
+            function enviarJson(formas_pagamento){
+                let dadosVenda = {
+                    valor_total: <?= $totalGeral ?>,
+                    total_itens: <?= $totalItens ?>,
+                    id_cliente: document.getElementById('id_cliente').value || null,
+                    id_funcionario: <?= $_SESSION['ID_Funcionario'] ?> || null,
+                    desconto: 0.00,
+                    formas_pagamento: formas_pagamento
+                };
+
+                fetch('finalizarvenda_pdv.php', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dadosVenda)
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Venda finalizada:', data);
+                    alert('Venda finalizada com sucesso!');
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao finalizar venda!');
+                });
+            }
+
         </script>
 
-        <script>
+        <script> // SCRIPT MODAL
             const valorTotal = parseFloat("<?= $totalGeral ?>");
             const popup = new bootstrap.Modal(document.getElementById('popupPagamento'));
 
@@ -456,33 +515,6 @@ if (isset($_GET['remover'])) {
                 calcularTroco();
                 });
             });
-
-            // 
-            /*function confirmarPagamento() {
-                const inputs = document.querySelectorAll('.forma');
-                let totalPago = 0;
-                let pagamentos = [];
-
-                inputs.forEach(input => {
-                const valor = parseFloat(input.value.replace(',', '.')) || 0;
-                if (valor > 0) {
-                    pagamentos.push({
-                    id_forma: input.dataset.id,
-                    valor: valor
-                    });
-                    totalPago += valor;
-                    input.value = ""; // limpa o input
-                }
-                });
-
-                if (totalPago >= valorTotal) {
-                alert("Pagamento registrado com sucesso!\n\nFormas de Pagamento:\n" +
-                    pagamentos.map(p => `ID ${p.id_forma}: R$ ${p.valor.toFixed(2).replace('.', ',')}`).join("\n"));
-                popup.hide();
-                } else {
-                alert("Valor pago insuficiente!");
-                }
-            }*/
 
             // atalhos para selecionar a forma de pagamento mais rápido
             function atalhoPagamento(e) {

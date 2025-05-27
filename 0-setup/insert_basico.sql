@@ -106,7 +106,8 @@ INSERT INTO MEDICAMENTOS (ID_Produto, ID_CategoriaMed, ID_Tarja, Tipo, Prin_Ativ
 
 INSERT INTO LOTES (Nome_Lote, ID_Produto, Preco_Unitario, Data_Validade) VALUES
 ('L202505A', 1, 4.50, '2025-12-31'),
-('L202506B', 2, 22.90, '2026-01-15');
+('L202506B', 2, 0.00, '2026-01-15');
+/* 22.90 */
 
 INSERT INTO ESTOQUE (ID_Produto, ID_Lote, Quantidade, Preco_Atual, Data_Entrada, Data_Atualizacao) VALUES
 (1, 1, 100, 4.50, NOW(), NOW()),

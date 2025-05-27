@@ -27,6 +27,9 @@ PRODUTO
 CAIXA
 1- Adicionar outra forma de pesquisa de produto (caso o código de barras não funcione)
 
+FORMAS PAGAMENTOS
+1- Quando for cadastrar crédito, novas abas de "Quant. Max Parcelas", "Quant. Padrão de Parcelas"
+
 
 
 

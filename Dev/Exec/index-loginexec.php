@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['ID_Funcionario'] = $dados['ID_Funcionario'];
                 $_SESSION['Nome'] = $dados['Nome'];
                 $_SESSION['ID_Cargo'] = $dados['ID_Cargo'];
-                $_SESSION['expire'] = strtotime('+30 minutes', strtotime('now'));
+                $_SESSION['expire'] = strtotime('+60 minutes', strtotime('now'));
                 $_SESSION["msg"] = "<div class='alert alert-primary' role='aviso'>
                                         Olá <strong>".$_SESSION["Nome"]."</strong>, Login efetuado com sucesso!
                                     </div>";

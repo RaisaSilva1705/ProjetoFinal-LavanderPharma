@@ -3,6 +3,33 @@ session_start();
 include "../../Dev/Exec/config.php";
 include DEV_PATH . 'Exec/conexao.php';
 
+header('Content-Type: application/json');
+
+// Recebe os dados em JSON bruto e Decodifica para array
+$dadosJSON = file_get_contents('php://input');
+$dados = json_decode($dadosJSON, true);
+
+// verificação
+if (!$dados) {
+    http_response_code(400);
+    echo json_encode(['erro' => 'Dados inválidos ou malformados']);
+    exit;
+}
+
+// atribuição dos valores
+$valor_total = isset($dados['valor_total']) ? number_format($dados['valor_total'], 2, '.', '') : null;
+$total_itens = isset($dados['total_itens']) ? intval($dados['total_itens']) : null;
+$id_cliente = isset($dados['id_cliente']) ? intval($dados['id_cliente']) : null;
+$id_funcionario = isset($dados['id_funcionario']) ? intval($dados['id_funcionario']) : null;
+$desconto = isset($dados['desconto']) ? number_format($dados['desconto'], 2, '.', '') : 0.00;
+$formas_pagamento = isset($dados['formas_pagamento']) ? $dados['formas_pagamento'] : [];
+
+if (empty($formas_pagamento)) {
+    http_response_code(400);
+    echo json_encode(['erro' => 'Nenhuma forma de pagamento informada']);
+    exit;
+}
+
 // Verifica se há itens no carrinho
 if (empty($_SESSION['carrinho'])) {
     $_SESSION['msg'] = "Carrinho vazio. Nenhuma venda registrada.";
@@ -13,34 +40,61 @@ if (empty($_SESSION['carrinho'])) {
 $conn->begin_transaction();
 
 try {
-    // Insere a venda
-    $id_funcionario = $_SESSION['ID_Funcionario'];
+    if (!isset($_SESSION['ID_CaixaAberto'])) {
+        http_response_code(400);
+        echo json_encode(['erro' => 'Caixa não está aberto.']);
+        exit;
+    }
     $id_caixaAberto = $_SESSION['ID_CaixaAberto'];
-    $id_cliente = $_POST['id_cliente'] ?? null;
-    $valorTotal = $_POST['valor_total'];
-    $desconto = $_POST['desconto'] ?? 0.00;
 
+    // Prepara a inserção da da venda
     $stmt = $conn->prepare("INSERT INTO VENDAS 
                                 (ID_Funcionario, ID_CaixaAberto, 
                                 ID_Cliente, DataHora_Venda, 
                                 Valor_Total, Desconto) 
                             VALUES (?, ?, ?, NOW(), ?, ?)");
-    $stmt->bind_param("iiidd", $id_funcionario, $id_caixaAberto, $id_cliente, $valorTotal, $desconto);
+    $stmt->bind_param("iiidd", $id_funcionario, $id_caixaAberto, $id_cliente, $valor_total, $desconto);
     $stmt->execute();
 
+    // ------- ID DA VENDA -------
     $idVenda = $stmt->insert_id;
+    
+    // Prepara a inserção da movimentação de caixa
+    $stmtMov = $conn->prepare("INSERT INTO MOVIMENTACOES_CAIXA (ID_Caixa, ID_Funcionario, Tipo, Valor, Descricao)
+                               VALUES (?, ?, 'Entrada', ?, ?)");
+    // Descrição  da movimentação
+    $descricaoMov = "Venda ID: $idVenda";
+    $stmtMov->bind_param("iids", $id_caixaAberto, $id_funcionario, $valor_total, $descricaoMov);
+    $stmtMov->execute();
 
-    // Insere os itens da venda
+
+    // Prepara a inserção dos itens da venda
     $stmtItem = $conn->prepare("INSERT INTO ITENS_VENDA (ID_Venda, ID_Produto, Quantidade, Valor_Total) 
                                 VALUES (?, ?, ?, ?)");
 
-    // Atualiza estoque por lote (baixa inteligente)
+    // Prepara a localização do estoque por lote (baixa inteligente)
     $stmtLotes = $conn->prepare("SELECT E.ID_Estoque, E.Quantidade, L.Data_Validade 
                                 FROM ESTOQUE E LEFT JOIN LOTES L 
                                     ON E.ID_Lote = L.ID_Lote 
                                 WHERE E.ID_Produto = ? AND E.Quantidade > 0 
                                 ORDER BY L.Data_Validade ASC, E.Data_Entrada ASC");
-    $stmtUpdateLote = $conn->prepare("UPDATE ESTOQUE SET Quantidade = Quantidade - ? WHERE ID_Estoque = ?");
+
+    // Prepara a atualização do estoque        
+    $stmtUpdateEstoque = $conn->prepare("UPDATE ESTOQUE SET Quantidade = Quantidade - ? WHERE ID_Estoque = ?");
+
+    // Prepara a inserção das formas de pagamento
+    $stmtPag = $conn->prepare("INSERT INTO VENDA_PAGAMENTOS (ID_Venda, ID_Forma_Pag, Valor, Quant_Vezes)
+                               VALUES (?, ?, ?, ?)");
+    
+    // realiza as inserções
+    foreach($formas_pagamento as $pagamento) {
+        $id_forma_pag = intval($pagamento['id_forma_pag']);
+        $valor = number_format((float)$pagamento['valor'], 2, '.', '');
+        $quant_vezes = intval($pagamento['quant_vezes']);
+        
+        $stmtPag->bind_param("iidi", $idVenda, $id_forma_pag, $valor, $quant_vezes);
+        $stmtPag->execute();
+    }
 
     foreach ($_SESSION['carrinho'] as $item) {
         $codigo = $item['codigo'];
@@ -54,15 +108,10 @@ try {
 
         $quantidade = $item['quantidade'];
         $preco = $item['preco'];
-        $valor_total = $preco * $quantidade;
+        $valor_total_item = $preco * $quantidade;
 
-        $stmtItem->bind_param("iiid", $idVenda, $id_produto, $quantidade, $valor_total);
+        $stmtItem->bind_param("iiid", $idVenda, $id_produto, $quantidade, $valor_total_item);
         $stmtItem->execute();
-
-        // Atualiza estoque por lote (baixa)
-        //$stmtEstoque = $conn->prepare("UPDATE ESTOQUE SET Quantidade = Quantidade - ? WHERE ID_Produto = ?");
-        //$stmtEstoque->bind_param("is", $quantidade, $id_produto);
-        //$stmtEstoque->execute();
 
         // Atualizar estoque por lote
         $stmtLotes->bind_param("i", $id_produto);
@@ -70,8 +119,8 @@ try {
         $lotes = $stmtLotes->get_result();
 
         $stmtMov = $conn->prepare("INSERT INTO MOVIMENTACAO_ESTOQUE 
-                                      (ID_Estoque, ID_Produto, Tipo, Quantidade, ID_Venda) 
-                                      VALUES (?, ?, 'SAIDA', ?, ?)");
+                                      (ID_Estoque, ID_Produto, ID_Funcionario, Tipo, Quantidade, ID_Venda) 
+                                   VALUES (?, ?, ?, 'SAIDA', ?, ?)");
 
         $qtdRestante = $quantidade;
 
@@ -82,15 +131,16 @@ try {
             if ($qtd_disponivel >= $qtdRestante) {
                 $qtd_a_retirar = $qtdRestante;
                 $qtdRestante = 0;
-            } else {
+            } 
+            else {
                 $qtd_a_retirar = $qtd_disponivel;
                 $qtdRestante -= $qtd_disponivel;
             }
 
-            $stmtUpdateLote->bind_param("ii", $qtd_a_retirar, $id_estoque);
-            $stmtUpdateLote->execute();
+            $stmtUpdateEstoque->bind_param("ii", $qtd_a_retirar, $id_estoque);
+            $stmtUpdateEstoque->execute();
 
-            $stmtMov->bind_param("iiii", $id_estoque, $id_produto, $qtd_a_retirar, $idVenda);
+            $stmtMov->bind_param("iiiii", $id_estoque, $id_produto, $id_funcionario, $qtd_a_retirar, $idVenda);
             $stmtMov->execute();
 
         }
@@ -101,30 +151,12 @@ try {
     }
 
     $conn->commit();
-    $_SESSION['msg'] = "Venda nº $idVenda finalizada com sucesso!";
+    echo json_encode(['sucesso' => true, 'id_venda' => $idVenda]);
     unset($_SESSION['carrinho']);
-
-    header("Location: pdv.php?id_venda=$idVenda");
-    exit;
-
-} catch (Exception $e) {
+} 
+catch (Exception $e) {
     $conn->rollback();
-    echo $erro = $e->getMessage();
-    $_SESSION['msg'] = "Erro ao finalizar venda";
-    //header("Location: pdv.php");
-
+    http_response_code(500);
+    echo json_encode(['erro' => 'Erro ao processar venda', 'detalhe' => $e->getMessage()]);
 }
-
-// implementar depois Controle de Estoque
-/* 
-$stmtEstoqueCheck = $conn->prepare("SELECT Quantidade FROM ESTOQUE WHERE ID_Produto = ?");
-$stmtEstoqueCheck->bind_param("i", $id_produto);
-$stmtEstoqueCheck->execute();
-$qtdAtual = $stmtEstoqueCheck->get_result()->fetch_assoc()['Quantidade'];
-
-if ($qtdAtual < $quantidade) {
-    throw new Exception("Estoque insuficiente para o produto $codigo");
-}
-
-*/
 ?>
