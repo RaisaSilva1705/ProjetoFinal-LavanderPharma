@@ -293,7 +293,7 @@ CREATE TABLE IF NOT EXISTS `CAIXAS_ABERTOS` (
 -- Table `MOVIMENTACOES_CAIXA`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `MOVIMENTACOES_CAIXA` (
-    `ID_Movimentacao` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_MovimentacaoCaixa` INT AUTO_INCREMENT PRIMARY KEY,
     `ID_Caixa` INT NOT NULL,
     `ID_Funcionario` INT NOT NULL, 
     `Tipo` ENUM('Entrada', 'Saída') NOT NULL, 
@@ -332,13 +332,14 @@ CREATE TABLE IF NOT EXISTS `VENDAS` (
     FOREIGN KEY (`ID_Cliente`) REFERENCES `CLIENTES` (`ID_Cliente`)
 ) ENGINE = InnoDB;
 /* drop table VENDAS; */
-/* select * from VENDAS; */
+select * from VENDAS; 
 
 -- -----------------------------------------------------
 -- Table `MOVIMENTACAO_ESTOQUE`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `MOVIMENTACAO_ESTOQUE` (
-    `ID_Movimentacao` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_MovimentacaoEstoque` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_Estoque` INT NOT NULL,
     `ID_Produto` INT NOT NULL,
     `ID_Funcionario` INT NOT NULL,
     `Tipo` ENUM('Entrada', 'Saída') NOT NULL,
@@ -346,6 +347,7 @@ CREATE TABLE IF NOT EXISTS `MOVIMENTACAO_ESTOQUE` (
     `ID_Venda` INT DEFAULT NULL,
     `Data_Movimentacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `OBS` VARCHAR(255) DEFAULT NULL,
+    FOREIGN KEY (`ID_Estoque`) REFERENCES `ESTOQUE` (`ID_Estoque`),
     FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
     FOREIGN KEY (`ID_Venda`) REFERENCES `VENDAS` (`ID_Venda`),
     FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`)
@@ -367,7 +369,7 @@ CREATE TABLE IF NOT EXISTS `VENDA_PAGAMENTOS` (
     FOREIGN KEY (`ID_Forma_Pag`) REFERENCES `FORMAS_PAGAMENTO` (`ID_Forma_Pag`)
 ) ENGINE = InnoDB;
 /* drop table VENDA_PAGAMENTOS; */
-/* select * from VENDA_PAGAMENTOS; */ 
+ select * from VENDA_PAGAMENTOS; 
 
 -- -----------------------------------------------------
 -- Table `ITENS_VENDA`

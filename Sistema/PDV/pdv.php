@@ -109,6 +109,19 @@ if (isset($_GET['remover'])) {
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <link rel="stylesheet" href="<?php echo DEV_URL ?>CSS/global.css">
+        <style>
+            .modalPix{
+                display:none; 
+                position:fixed; 
+                top:0; 
+                left:0; 
+                width:100%; 
+                height:100%; 
+                background-color:rgba(0,0,0,0.5); 
+                justify-content:center; 
+                align-items:center;
+            }
+        </style>
     </head>
     <body class="bg-light">
 
@@ -372,6 +385,17 @@ if (isset($_GET['remover'])) {
                 </div>
             </div>
 
+            <!-- Modal PIX -->
+            <div id="modalPix" class="modalPix">
+                
+                <div style="background:white; padding:20px; border-radius:10px; text-align:center;">
+                    <h3>Escaneie o QR Code PIX:</h3>
+                    <img id="pixImg" src="" width="300">
+                    <br><br>
+                    <button id="fecharModalPix">Confirmar pagamento</button>
+                </div>
+            </div>
+
         </div>
         
 
@@ -388,12 +412,12 @@ if (isset($_GET['remover'])) {
                         if (data.success) {
                             document.getElementById('descricao').value = data.nome;
                             document.getElementById('preco').value = "R$ " + parseFloat(data.preco).toFixed(2).replace('.', ',');
-                            document.getElementById('foto').src = '../../Dev/Imagens/' + data.foto;
+                            document.getElementById('foto').src = '../../Dev/Imagens/imgProdutos/' + data.foto;
                         } else {
                             alert(data.msg);
                             document.getElementById('descricao').value = '';
                             document.getElementById('preco').value = 'R$ 0,00';
-                            document.getElementById('foto').src = '../../Dev/Imagens/sem-imagem.jpg';
+                            document.getElementById('foto').src = '../../Dev/Imagens/imgSistema/sem-imagem.jpg';
                         }
                     })
                     .catch(err => {
@@ -421,22 +445,58 @@ if (isset($_GET['remover'])) {
                 let erroPagamento = false;
 
                 for (let forma of formas_pagamento) {
-                    if (forma.id_forma_pag === 2 || forma.id_forma_pag === 3) {  // Crédito ou Débito
-                        const response = await fetch('http://localhost/htdocs/Farmácia/Dev/Exec/stripe_pagamento.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                valor: forma.valor
+                    if (forma.id_forma_pag !== 1) {  // apenas Crédito (2), Débito (3) ou PIX (4)
+                        let response;
+
+                        if (forma.id_forma_pag === 4){ // PIX
+
+                            // -------- STRIPE -> precisa de verificação com CNPJ --------
+                            /*response = await fetch('http://localhost/htdocs/Farmácia/Dev/Exec/stripe_pagamento.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    valor: forma.valor,
+                                    tipo: 'pix'
+                                })
+                            });*/
+
+                            // Simulação: gera um QR Code fake com o valor da venda
+                            const qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=Pagamento_PIX_VALOR_' + encodeURIComponent(forma.valor);
+
+                            // Abre o Modal do PIX
+                            const modalPix = document.getElementById('modalPix');
+                            const pixImg = document.getElementById('pixImg');
+                            pixImg.src = qrCodeUrl;
+
+                            modalPix.style.display = 'flex';
+                            modalPix.style.zIndex = 9999;
+
+                            await new Promise((resolve) => {
+                                document.getElementById('fecharModalPix').onclick = function(){
+                                    modalPix.style.display = 'none';
+                                    resolve();
+                                }
                             })
-                        });
 
-                        const result = await response.json();
-                        // console.log(result);
+                        }
+                        else { // Cartão
+                            response = await fetch('http://localhost/htdocs/Farmácia/Dev/Exec/stripe_pagamento.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    valor: forma.valor,
+                                    tipo: 'cartao'
+                                })
+                            });
+                        
+                            const result = await response.json();
+                            // console.log(result);
 
-                        if (!result.sucesso) {
-                            document.getElementById('card-errors').textContent = 'Erro no pagamento: ' + result.mensagem;
-                            erroPagamento = true;
-                            break;  // Cancela, não grava no banco
+                            if (!result.sucesso) {
+                                document.getElementById('card-errors').textContent = 'Erro no pagamento: ' + result.mensagem;
+                                erroPagamento = true;
+                                break; // Cancela, não grava no banco
+                            }
                         }
                     }
                 }
@@ -466,6 +526,8 @@ if (isset($_GET['remover'])) {
                 .then(data => {
                     console.log('Venda finalizada:', data);
                     alert('Venda finalizada com sucesso!');
+                    window.open(`cupomNfiscal.php?ID_Venda=${id_venda}`, '_blank');
+                    location.reload();
                 })
                 .catch(error => {
                     console.error('Erro:', error);
@@ -524,17 +586,17 @@ if (isset($_GET['remover'])) {
                 if (document.activeElement.tagName === 'INPUT') return;
 
                 if (teclas.includes(e.key)) {
-                let index = parseInt(e.key) - 1;
-                if (inputs[index]) {
-                    inputs.forEach(i => i.value = ""); // limpa todos
-                    inputs[index].value = valorTotal.toFixed(2).replace('.', ',');
-                    calcularTroco();
-                }
+                    let index = parseInt(e.key) - 1;
+                    if (inputs[index]) {
+                        inputs.forEach(i => i.value = ""); // limpa todos
+                        inputs[index].value = valorTotal.toFixed(2).replace('.', ',');
+                        calcularTroco();
+                    }
                 }
 
                 if (e.key === "Escape") {
-                popup.hide();
-                document.removeEventListener('keydown', atalhoPagamento);
+                    popup.hide();
+                    document.removeEventListener('keydown', atalhoPagamento);
                 }
             }
         </script>
