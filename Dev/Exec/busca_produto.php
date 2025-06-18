@@ -2,7 +2,7 @@
 include "../../Dev/Exec/config.php";
 include DEV_PATH . "Exec/conexao.php";
 
-if (isset($_GET['codigo'])) {
+if (isset($_GET['codigo'])) { // POR CÓDIGO DE BARRAS
     $codigo = $_GET['codigo'];
 
     $stmt = $conn->prepare("SELECT P.Nome, 
@@ -31,5 +31,29 @@ if (isset($_GET['codigo'])) {
 
     $stmt->close();
     $conn->close();
+    exit;
+}
+
+if (isset($_GET['nome'])) { // PELO NOME DO PRODUTO
+    $nome = $_GET['nome'] . '%';
+
+    $stmt = $conn->prepare("SELECT P.EAN_GTIN, P.Nome 
+                            FROM PRODUTOS P
+                            WHERE P.Nome LIKE ?
+                            LIMIT 5");
+    $stmt->bind_param("s", $nome);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $produtos = [];
+    while ($row = $result->fetch_assoc()) {
+        $produtos[] = $row;
+    }
+
+    echo json_encode($produtos);
+
+    $stmt->close();
+    $conn->close();
+    exit;
 }
 ?>

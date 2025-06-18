@@ -10,11 +10,20 @@ include DEV_PATH . 'Exec/conexao.php';
 include DEV_PATH . "Exec/validar_sessao.php";
 include DEV_PATH . "Exec/validar_acesso.php";
 
+// Confere se não há ID_Caixa aberto
 if (!isset($_SESSION['ID_Caixa'])){
     header("Location: caixa_pdv.php");
     exit();
 }
 
+// Busca dados da empresa (quant_max_parcelas e valor_min_parcelas)
+$sqlInfoParcelas =  "SELECT Quant_Max_Parcelas, Valor_Min_Parcelas FROM CONFIGURACOES";
+$stmtInfoParcelas = $conn->prepare($sqlInfoParcelas);
+$stmtInfoParcelas->execute();
+$resultInfoParcelas = $stmtInfoParcelas->get_result();
+$infoParcelas = $resultInfoParcelas->fetch_assoc();
+
+// Cancela a venda
 if (isset($_POST['cancelar_venda'])) {
     unset($_SESSION['carrinho']);
     unset($_SESSION['ultimo_produto']);
@@ -24,6 +33,15 @@ if (isset($_POST['cancelar_venda'])) {
 
 // Inicializa o carrinho
 if (!isset($_SESSION['carrinho'])) $_SESSION['carrinho'] = [];
+
+// Remove item do carrinho
+if (isset($_GET['remover'])) {
+    $index = intval($_GET['remover']);
+    if (isset($_SESSION['carrinho'][$index])) {
+        unset($_SESSION['carrinho'][$index]);
+        $_SESSION['carrinho'] = array_values($_SESSION['carrinho']); // reorganiza os índices
+    }
+}
 
 // Adiciona item no carrinho
 if (isset($_POST['codigo'])) {
@@ -89,15 +107,6 @@ if (isset($_POST['codigo'])) {
     }
     
     $stmt->close();
-}
-
-// Remove item do carrinho
-if (isset($_GET['remover'])) {
-    $index = intval($_GET['remover']);
-    if (isset($_SESSION['carrinho'][$index])) {
-        unset($_SESSION['carrinho'][$index]);
-        $_SESSION['carrinho'] = array_values($_SESSION['carrinho']); // reorganiza os índices
-    }
 }
 ?>
 
@@ -190,14 +199,15 @@ if (isset($_GET['remover'])) {
                                 <!-- COLUNA IMAGEM -->
                                 <div class="col-md-5 m-3">
                                     <div class="col-md-5 text-center">
-                                        <img src='<?php echo DEV_URL?>Imagens/sem-imagem.jpg' id="foto" name="foto" class="product-img mb-2" alt="Imagem da Embalagem do Produto" height="280px" width="280px">
+                                        <img src='<?php echo DEV_URL?>Imagens/ImgSistema/sem-imagem.jpg' id="foto" name="foto" class="product-img mb-2" alt="Imagem da Embalagem do Produto" height="280px" width="280px">
                                     </div>
                                 </div>
                                 <!-- COLUNA INFO -->
                                 <div class="col-md-6 m-2 mt-4">
                                     <div class="col-md-10">
                                         <label for="descricao">Descrição:</label>
-                                        <input type="text" id="descricao" name="descricao" class="form-control input-big" readonly value="">
+                                        <input type="text" id="descricao" name="descricao" class="form-control input-big" autocomplete="off">
+                                        <div id="sugestoes_nome" class="list-group mt-1" style="position: absolute; z-index: 1000;"></div>
                                     </div>
                                     <div class="row mt-4">
                                         <div class="col-5">
@@ -303,49 +313,36 @@ if (isset($_GET['remover'])) {
 
                 <!-- RODAPÉ -->
                 <div class="row">
-                    <div class="col-md-3">
-                        <label>Forma Pgto (1):</label>
-                        <input type="text" class="form-control" value="À VISTA">
+                    <div class="col-md-2">
+                        <label>Total Bruto:</label>
+                        <input type="text" id="total_bruto" class="form-control" value="R$ <?= number_format($totalGeral, 2, ',', '.') ?>" readonly>
                     </div>
-                    <div class="col-md-3">
-                        <label>Valor:</label>
-                        <input type="text" class="form-control" value="R$ <?= number_format($totalGeral, 2, ',', '.') ?>">
+                    <div class="col-md-1">
+                        <label>Qtd. Itens:</label>
+                        <input type="text" class="form-control" value="<?= $totalItens ?>" readonly>
                     </div>
-                    <div class="col-md-3">
-                        <label>Forma Pgto (2):</label>
-                        <input type="text" class="form-control">
+
+                    <div class="col-md-4 d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-success" onclick="selecionarForma(1)">(1) Dinheiro</button>
+                        <button type="button" class="btn btn-success" onclick="selecionarForma(2)">(2) Crédito</button>
+                        <button type="button" class="btn btn-success" onclick="selecionarForma(3)">(3) Débito</button>
+                        <button type="button" class="btn btn-success" onclick="selecionarForma(4)">(4) Pix</button>
                     </div>
-                    <div class="col-md-3">
-                        <label>Valor:</label>
-                        <input type="text" class="form-control">
+
+                    <div class="col-md-5 d-flex align-items-center justify-content-end gap-2">
+                        <form action="pdv.php" method="POST">
+                            <input type="hidden" name="cancelar_venda" value="1">
+                            <button class="btn btn-danger" type="submit">Cancelar Venda</button>
+                        </form>
+                        <form action="finalizarcaixa_pdv.php" method="POST">
+                            <input type="hidden" name="finalizar_caixa" value="1">
+                            <button class="btn btn-secondary" type="submit">Fechar Caixa</button>
+                        </form>
                     </div>
                 </div>
 
                 <div class="row mt-3">
-                    <div class="col-md-3">
-                        <label>Total Bruto:</label>
-                        <input type="text" id="total_bruto" class="form-control" value="R$ <?= number_format($totalGeral, 2, ',', '.') ?>" readonly>
-                    </div>
-                    <div class="col-md-3">
-                        <label>Qtd. Itens:</label>
-                        <input type="text" class="form-control" value="<?= $totalItens ?>" readonly>
-                    </div>
-                    <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
-                        <form action="pdv.php" method="POST">
-                            <input type="hidden" name="cancelar_venda" value="1">
-                            <button class="btn btn-secondary" type="submit">Cancelar Venda</button>
-                        </form>
-
-                        <div>
-                            <button type="button" class="btn btn-success" onclick="abrirPopup()">Finalizar</button>
-                        </div>
-
-                        <form action="finalizarcaixa_pdv.php" method="POST">
-                            <input type="hidden" name="finalizar_caixa" value="1">
-                            <button class="btn btn-danger" type="submit">Fechar Caixa</button>
-                        </form>
-                        
-                    </div>
+                    
                 </div>
 
             </div>
@@ -365,10 +362,14 @@ if (isset($_GET['remover'])) {
                                 $foPags = $conn->query($sqlFoPags);
                             ?>
                             <?php while($foPag = $foPags->fetch_assoc()): ?>
-                                <div class="mb-3 row">
+                                <div class="mb-3 row campo-forma" data-id="<?= $foPag['ID_Forma_Pag']; ?>" style="display: none;">
                                     <label class="col-sm-4 col-form-label"><?= $foPag['ID_Forma_Pag']; ?> - <?= $foPag['Tipo']; ?></label>
-                                    <div class="col-sm-8">
-                                        <input type="text" class="form-control forma" data-id="<?= $foPag['ID_Forma_Pag'] ?>">
+                                    <div class="col-sm-8 d-flex align-items-center">
+                                        <input type="text" class="form-control forma" data-id="<?= $foPag['ID_Forma_Pag'] ?>" placeholder="R$">
+                                        <?php if($foPag['ID_Forma_Pag'] == 2 && $totalGeral >= $infoParcelas['Valor_Min_Parcelas']): ?>
+                                            <label class="me-2 mb-0">Qnt. Parcelas:</label>
+                                            <input type="number" class="form-control parcela" id="parcelas" name="quant_parcelas" min="1" max="<?= $infoParcelas['Quant_Max_Parcelas']?>">
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endwhile; ?>
@@ -399,8 +400,8 @@ if (isset($_GET['remover'])) {
         </div>
         
 
-        <script> // atualização automática dos valores 
-            // MUDAR OS VALORES 
+        <script> 
+            // MUDAR OS VALORES POR CÓDIGO DE BARRAS
             document.getElementById('codigo').addEventListener('change', function () {
                 const codigo = this.value;
 
@@ -426,21 +427,116 @@ if (isset($_GET['remover'])) {
                     });
             });
 
+            // MUDAR OS VALORES POR NOME DO PRODUTO
+            const campoDescricaoProduto = document.getElementById('descricao');
+            const sugestoesDiv = document.getElementById('sugestoes_nome');
+
+            campoDescricaoProduto.addEventListener('input', function(){
+                const termo = this.value.trim();
+
+                if (termo.length < 2) {
+                    sugestoesDiv.innerHTML = '';
+                    return;
+                }
+
+                fetch('../../Dev/Exec/busca_produto.php?nome=' + encodeURIComponent(termo))
+                    .then(response => response.json())
+                    .then(produtos => {
+                        sugestoesDiv.innerHTML = '';
+
+                        produtos.forEach(produto => {
+                            const item = document.createElement('a');
+                            item.classList.add('list-group-item', 'list-group-item-action');
+                            item.textContent = produto.Nome;
+                            item.dataset.codigo = produto.EAN_GTIN;
+
+                            item.addEventListener('click', function(){
+                                document.getElementById('codigo').value = this.dataset.codigo;
+                                campoDescricaoProduto.value = this.textContent;
+                                sugestoesDiv.innerHTML = '';
+
+                                // Força o evento de 'change' no campo código para carregar dados
+                                document.getElementById('codigo').dispatchEvent(new Event('change'));
+                            });
+
+                            sugestoesDiv.appendChild(item);
+                        });
+                    });
+            });
+
+            // Esconde sugestões se clicar fora
+            document.addEventListener('click', function(e){
+                if (!campoDescricaoProduto.contains(e.target) && !sugestoesDiv.contains(e.target)) {
+                    sugestoesDiv.innerHTML = '';
+                }
+            });
+
+            // -------------------------------------------------------------------------
+            // -------------------------------------------------------------------------
+
+            let formasSelecionadas = [];
+
+            function selecionarForma(id) {
+                /*if (formasSelecionadas.includes(id)) return;
+
+                if (formasSelecionadas.length >= 2) {
+                    alert("Só é possível usar até 2 formas de pagamento por venda.");
+                    return;
+                }*/
+
+                formasSelecionadas.push(id);
+                mostrarInputsSelecionados();
+                abrirPopup();
+            }
+
+            function mostrarInputsSelecionados() {
+                const ultimoSelecionado = formasSelecionadas[formasSelecionadas.length - 1];
+                
+                document.querySelectorAll('.campo-forma').forEach(div => {
+                    const idForma = parseInt(div.dataset.id);
+                    div.style.display = (idForma === ultimoSelecionado) ? 'flex' : 'none';
+                });
+            }
+
+            // -------------------------------------------------------------------------
+            // -------------------------------------------------------------------------
+            
+            let totalPago = 0;
+            let formas_pagamento = [];
+            let mapaFormas = {}; // para evitar entradas duplicadas no banco
+
             // Confirmação de pagamento com STRIPE
             document.getElementById('confirmarPagamento').addEventListener('click', async function(event){
                 event.preventDefault();
 
-                const formas_pagamento = [];
                 document.querySelectorAll('.forma').forEach(function(input){
+                    const style = window.getComputedStyle(input.closest('.campo-forma'));
+                    if (style.display === 'none') return; // Ignora campos ocultos
+                    
+                    const id = parseInt(input.dataset.id);
                     const valor = parseFloat(input.value.replace(',', '.'));
                     if (!isNaN(valor) && valor > 0) {
-                        formas_pagamento.push({
-                            id_forma_pag: parseInt(input.dataset.id),
-                            valor: valor,
-                            quant_vezes: 1 // fixo por enquanto
-                        });
+                        totalPago += valor;
+
+                        if (!mapaFormas[id]){
+                            mapaFormas[id] = {
+                                id_forma_pag: id,
+                                valor: 0,
+                                quant_vezes: (valor >= <?= $infoParcelas['Valor_Min_Parcelas'] ?>) ? document.getElementById('parcelas').value : 1
+                            };
+                        }
+                        mapaFormas[id].valor += valor;
                     }
                 });
+
+                formas_pagamento = Object.values(mapaFormas);
+                console.log(formas_pagamento);
+
+                if (totalPago < <?= $totalGeral ?>) {
+                    alert("Pagamento Concluído. Ainda faltam R$ " + (<?= $totalGeral ?> - totalPago).toFixed(2).replace('.', ','));
+                    calcularTroco();
+                    return;
+                }
 
                 let erroPagamento = false;
 
@@ -506,10 +602,24 @@ if (isset($_GET['remover'])) {
                 }
             });
 
+            // pega o valor total pago 
+            function calcularTotalPago() {
+                const inputs = document.querySelectorAll('.forma');
+                let totalPagoPag = 0;
+
+                inputs.forEach(input => {
+                    const valor = parseFloat(input.value.replace(',', '.')) || 0;
+                    totalPagoPag += valor;
+                });
+
+                return totalPagoPag;
+            }
+
             // APÓS CONFIRMAR PAGAMENTO, MONTA JSON E ENVIA
             function enviarJson(formas_pagamento){
                 let dadosVenda = {
                     valor_total: <?= $totalGeral ?>,
+                    total_pago: calcularTotalPago(),
                     total_itens: <?= $totalItens ?>,
                     id_cliente: document.getElementById('id_cliente').value || null,
                     id_funcionario: <?= $_SESSION['ID_Funcionario'] ?> || null,
@@ -522,12 +632,20 @@ if (isset($_GET['remover'])) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dadosVenda)
                 })
-                .then(response => response.text())
+                .then(response => response.json())
                 .then(data => {
-                    console.log('Venda finalizada:', data);
-                    alert('Venda finalizada com sucesso!');
-                    window.open(`cupomNfiscal.php?ID_Venda=${id_venda}`, '_blank');
-                    location.reload();
+                    if(data.sucesso){
+                        totalPago = 0;
+                        formas_pagamento = [];
+                        console.log('Venda finalizada:', data);
+                        alert('Venda finalizada com sucesso!');
+                        window.open(`cupomNfiscal.php?ID_Venda=${data.id_venda}`, '_blank');
+                        location.reload();
+                    }
+                    else {
+                        console.error('Erro ao finalizar:', data);
+                        alert('Erro ao finalizar venda: ' + (data.erro || 'Desconhecido'));
+                    }
                 })
                 .catch(error => {
                     console.error('Erro:', error);
@@ -535,9 +653,10 @@ if (isset($_GET['remover'])) {
                 });
             }
 
-        </script>
-
-        <script> // SCRIPT MODAL
+            // -------------------------------------------------------------------------
+            // -------------------------------------------------------------------------
+            
+            // SCRIPT MODAL
             const valorTotal = parseFloat("<?= $totalGeral ?>");
             const popup = new bootstrap.Modal(document.getElementById('popupPagamento'));
 
@@ -548,37 +667,42 @@ if (isset($_GET['remover'])) {
 
             // calcula o troco automaticamente
             function calcularTroco() {
-                const inputs = document.querySelectorAll('.forma');
+                /*const inputs = document.querySelectorAll('.forma');
                 let totalPago = 0;
 
                 inputs.forEach(input => {
-                const valor = parseFloat(input.value.replace(',', '.')) || 0;
-                totalPago += valor;
-                });
-
-                const troco = totalPago - valorTotal;
+                    const valor = parseFloat(input.value.replace(',', '.')) || 0;
+                    totalPago += valor;
+                });*/
+                const totalPagoAtual = calcularTotalPago();
+                const troco = totalPagoAtual - valorTotal;
                 document.getElementById('troco').innerText = "Troco: R$ " + troco.toFixed(2).replace('.', ',');
             }
+
+            // -------------------------------------------------------------------------
+            // -------------------------------------------------------------------------
 
             // corrige valores inteiro (10) para números flutuantes (10,00)
             document.querySelectorAll('.forma').forEach(input => {
                 input.addEventListener('blur', function () {
-                let valorTexto = this.value.trim();
+                    let valorTexto = this.value.trim();
 
-                // Corrige vírgulas e remove caracteres inválidos
-                let valorNumerico = parseFloat(valorTexto.replace(',', '.').replace(/[^\d.]/g, ''));
+                    // Corrige vírgulas e remove caracteres inválidos
+                    let valorNumerico = parseFloat(valorTexto.replace(',', '.').replace(/[^\d.]/g, ''));
 
-                if (!isNaN(valorNumerico)) {
-                    this.value = valorNumerico.toFixed(2).replace('.', ',');
-                } else {
-                    this.value = "";
-                }
+                    if (!isNaN(valorNumerico))
+                        this.value = valorNumerico.toFixed(2).replace('.', ',');
+                    else
+                        this.value = "";
 
-                calcularTroco();
+                    calcularTroco();
                 });
             });
 
-            // atalhos para selecionar a forma de pagamento mais rápido
+            // -------------------------------------------------------------------------
+            // -------------------------------------------------------------------------
+
+            // atalhos para selecionar a forma de pagamento mais rápido (corrigir futuramente)
             function atalhoPagamento(e) {
                 const inputs = document.querySelectorAll('.forma');
                 const teclas = ['1', '2', '3', '4'];

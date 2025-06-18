@@ -58,7 +58,7 @@
     <a class="dropdown-toggle" href="#" data-bs-toggle="dropdown">PDV</a>
     <ul class="dropdown-menu">
       <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>PDV/pdv.php">Realizar Venda</a></li>
-      <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>PDV/relatorio_vendas.php">Relatório de Vendas</a></li>
+      <li><a class="dropdown-item" href="<?php echo SISTEMA_URL ?>PDV/relatorio_pdv.php">Relatório de Vendas</a></li>
     </ul>
   </div>
 

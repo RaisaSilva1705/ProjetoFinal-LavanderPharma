@@ -17,10 +17,17 @@ $sqlCaixas = "SELECT ID_Caixa,
               FROM CAIXAS";
 $caixas = $conn->query($sqlCaixas);
 
+// Busca turnos
+$sqlTurnos = "SELECT ID_Turno,
+                     Turno
+              FROM TURNOS";
+$turnos = $conn->query($sqlTurnos);
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $id_caixa = $_POST['id_caixa'];
     $id_funcionario = $_SESSION['ID_Funcionario'];
     $saldoInicial = $_POST['saldo_inicial'];
+    $turno = $_POST['id_turno'];
 
     // Buscar o status real do caixa informado
     $sqlStatus = "SELECT 
@@ -43,11 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         
         if ($stmt->execute()){
             $sql ="INSERT INTO CAIXAS_ABERTOS 
-                    (ID_Caixa, ID_Funcionario, 
+                    (ID_Caixa, ID_Funcionario, ID_Turno,
                     Data_Abertura, Saldo_Inicial)
-                   VALUES (?, ?, NOW(), ?);";
+                   VALUES (?, ?, ?, NOW(), ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("iid", $id_caixa, $id_funcionario, $saldoInicial);
+            $stmt->bind_param("iiid", $id_caixa, $id_funcionario, $turno, $saldoInicial);
             $stmt->execute();
 
             $_SESSION['ID_CaixaAberto'] = $stmt->insert_id;
@@ -114,6 +121,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
                                 <option value="">Selecione</option>
                                 <?php while($caixa = $caixas->fetch_assoc()): ?>
                                     <option value="<?= $caixa['ID_Caixa'] ?>"><?= $caixa['Caixa'] ?></option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="id_turno" class="form-label">Selecione o Turno</label>
+                            <select class="form-select" name="id_turno" id="id_turno" required>
+                                <option value="">Selecione</option>
+                                <?php while($turno = $turnos->fetch_assoc()): ?>
+                                    <option value="<?= $turno['ID_Turno'] ?>"><?= $turno['Turno'] ?></option>
                                 <?php endwhile; ?>
                             </select>
                         </div>

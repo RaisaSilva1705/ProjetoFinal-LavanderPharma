@@ -18,6 +18,7 @@ if (!$dados) {
 
 // atribuição dos valores
 $valor_total = isset($dados['valor_total']) ? number_format($dados['valor_total'], 2, '.', '') : null;
+$total_pago = isset($dados['total_pago']) ? number_format($dados['total_pago'], 2, '.', ',') : null;
 $total_itens = isset($dados['total_itens']) ? intval($dados['total_itens']) : null;
 $id_cliente = isset($dados['id_cliente']) ? intval($dados['id_cliente']) : null;
 $id_funcionario = isset($dados['id_funcionario']) ? intval($dados['id_funcionario']) : null;
@@ -83,16 +84,17 @@ try {
     $stmtUpdateEstoque = $conn->prepare("UPDATE ESTOQUE SET Quantidade = Quantidade - ? WHERE ID_Estoque = ?");
 
     // Prepara a inserção das formas de pagamento
-    $stmtPag = $conn->prepare("INSERT INTO VENDA_PAGAMENTOS (ID_Venda, ID_Forma_Pag, Valor, Quant_Vezes)
-                               VALUES (?, ?, ?, ?)");
+    $stmtPag = $conn->prepare("INSERT INTO VENDA_PAGAMENTOS (ID_Venda, ID_Forma_Pag, Valor, Troco, Quant_Vezes)
+                               VALUES (?, ?, ?, ?, ?)");
     
     // realiza as inserções
     foreach($formas_pagamento as $pagamento) {
         $id_forma_pag = intval($pagamento['id_forma_pag']);
         $valor = number_format((float)$pagamento['valor'], 2, '.', '');
+        $troco = $total_pago - $valor_total;
         $quant_vezes = intval($pagamento['quant_vezes']);
         
-        $stmtPag->bind_param("iidi", $idVenda, $id_forma_pag, $valor, $quant_vezes);
+        $stmtPag->bind_param("iiddi", $idVenda, $id_forma_pag, $valor, $troco, $quant_vezes);
         $stmtPag->execute();
     }
 

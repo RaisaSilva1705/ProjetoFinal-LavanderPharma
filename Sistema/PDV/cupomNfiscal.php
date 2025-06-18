@@ -15,19 +15,12 @@ if (!isset($_GET['ID_Venda'])){
 
 $id_venda = $_GET['ID_Venda'];
 
-// Dados da empresa
-$empresa = [
-    'Nome' => 'Farmácia LavenderPharma',
-    'CNPJ' => 'XX.XXX.XXX/0001-99',
-    'Endereco' => 'Rua das Flores',
-    'End_Numero' => 123,
-    'Bairro' => 'Centro',
-    'Cidade' => 'São Paulo/SP',
-    'CEP' => '01000-000',
-    'Loja' => 01,
-    'Nome_Fantasia' => 'LavenderPharma',
-    'Slogan' => 'Cuidando de você!'
-];
+// Busca dados da empresa
+$sqlDadosEmpresa =  "SELECT * FROM CONFIGURACOES";
+$stmtDadosEmpresa = $conn->prepare($sqlDadosEmpresa);
+$stmtDadosEmpresa->execute();
+$resultDadosEmpresa = $stmtDadosEmpresa->get_result();
+$dadosEmpresa = $resultDadosEmpresa->fetch_assoc();
 
 // Busca dados da venda
 $sqlDadosVenda =  "SELECT V.DataHora_Venda,
@@ -49,6 +42,7 @@ $dadosVenda = $resultDadosVenda->fetch_assoc();
 // Busca dados dos pagamentos da venda
 $sqlDadosPagamento =  "SELECT FP.Tipo,
                             VP.Valor AS 'Valor_Pago',
+                            VP.Troco,
                             VP.Quant_Vezes,
                             Cai.Caixa
                   FROM FORMAS_PAGAMENTO FP LEFT JOIN VENDA_PAGAMENTOS VP
@@ -145,15 +139,15 @@ $dataHora = date('d/m/Y H:i:s', strtotime($dadosVenda['DataHora_Venda']));
 
     <div class="cupom">
         <div class="text-center small">
-            <strong><?= $empresa['Nome'] ?></strong><br>
-            CNPJ: <?= $empresa['CNPJ'] ?><br>
-            <?= $empresa['Endereco'] ?>, <?= $empresa['End_Numero'] ?> - Loja <?= $empresa['Loja'] ?><br>
-            <?= $empresa['Bairro'] ?>, <?= $empresa['Cidade'] ?>, CEP: <?= $empresa['CEP'] ?>
+            <strong><?= $dadosEmpresa['Nome_RazaoSocial'] ?></strong><br>
+            CNPJ: <?= $dadosEmpresa['Documento'] ?><br>
+            <?= $dadosEmpresa['Endereco'] ?>, <?= $dadosEmpresa['End_Numero'] ?> - Loja <?= $dadosEmpresa['Loja'] ?><br>
+            <?= $dadosEmpresa['Bairro'] ?>, <?= $dadosEmpresa['Cidade'] ?>/<?= $dadosEmpresa['Estado'] ?>, CEP: <?= $dadosEmpresa['CEP'] ?>
         </div>
         <hr>
         <div class="text-center small">
             <strong>Extrato No. <?= $id_venda ?></strong><br>
-            <strong>CUPOM FISCAL ELETRÔNICO - SAT</strong>
+            <strong>CUPOM NÃO FISCAL ELETRÔNICO</strong>
         </div>
         <hr>
         <div class="text-center small">
@@ -185,6 +179,12 @@ $dataHora = date('d/m/Y H:i:s', strtotime($dadosVenda['DataHora_Venda']));
                 <?php foreach($dadosPagamento as $pag): ?>
                     <div><?= $pag['Tipo'] ?>: <?= number_format($pag['Valor_Pago'], 2, ',', '.') ?></div>
                 <?php endforeach; ?>
+                <?php if ($pag['Troco'] > 0.00)
+                    echo "<div>Troco: " . number_format($pag['Troco'], 2, ',', '.') . "</div>";
+                ?>
+                <?php if ($pag['Quant_Vezes'] > 1) 
+                    echo "<div>Parcelado " . $pag['Quant_Vezes'] . " vezes.</div>";
+                ?>
             </div>
             <div>
                 <div style="display: flex; justify-content: space-between;">
@@ -197,7 +197,7 @@ $dataHora = date('d/m/Y H:i:s', strtotime($dadosVenda['DataHora_Venda']));
         </div>
         <hr>
         <div class="text-center small"> <!-- "RODAPÉ" -->
-            SAT No. <?= rand(100000,999999) ?><br>
+            SAT No. XXXXXX<br>
             <?= $dataHora ?>
         </div>
         <hr>
@@ -212,11 +212,17 @@ $dataHora = date('d/m/Y H:i:s', strtotime($dadosVenda['DataHora_Venda']));
                     <span><?= number_format($pag['Valor_Pago'], 2, ',', '.') ?></span>
                 </div>
             <?php endforeach; ?>
-            Loja <?= $empresa['Loja'] ?><br>
+            <?php if ($pag['Troco'] > 0.00): ?>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Troco:</span>
+                    <span> <?= number_format($pag['Troco'], 2, ',', '.') ?></span>
+                </div>
+            <?php endif; ?>
+            Loja <?= $dadosEmpresa['Loja'] ?><br>
             Operador: <?= $dadosVenda['Nome_Funcionario'] ?><br>
             <div class="text-center">
-                <strong>** <?= $empresa['Nome_Fantasia'] ?> **</strong><br>
-                "<?= $empresa['Slogan'] ?>"<br>
+                <strong>** <?= $dadosEmpresa['Nome_Fantasia'] ?> **</strong><br>
+                "<?= $dadosEmpresa['Slogan'] ?>"<br>
                 AGRADECEMOS A PREFERÊNCIA!<br>
                 <?= $dataHora ?> - Caixa: <?= $dadosVenda['ID_Caixa'] ?? '01' ?>
             </div>
@@ -224,7 +230,7 @@ $dataHora = date('d/m/Y H:i:s', strtotime($dadosVenda['DataHora_Venda']));
     </div>
 
     <script>
-        window.print();
+        //window.print();
     </script>
 
 </body>

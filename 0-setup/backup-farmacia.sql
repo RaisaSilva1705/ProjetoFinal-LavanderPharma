@@ -1,9 +1,32 @@
 -- -----------------------------------------------------
--- Criando BATABASE `lavanderpharma`
+-- Criando BATABASE `sistemaFarmacia`
 -- -----------------------------------------------------
-CREATE DATABASE IF NOT EXISTS `lavanderpharma` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `lavanderpharma`;
-/* drop database lavanderpharma;*/
+CREATE DATABASE IF NOT EXISTS `sistemaFarmacia` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `sistemaFarmacia`;
+/* drop database sistemaFarmacia; */
+
+-- -----------------------------------------------------
+-- Table `CONFIGURACOES`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `CONFIGURACOES` (
+    `ID_Config` INT AUTO_INCREMENT PRIMARY KEY,
+    `Nome_RazaoSocial` VARCHAR(255) NOT NULL,
+    `Nome_Fantasia` VARCHAR(255) NOT NULL,
+    `Slogan` VARCHAR(255) NOT NULL,
+    `Documento` VARCHAR(18) NOT NULL,
+    `Loja` VARCHAR(100) NOT NULL,
+    `CEP` CHAR(8) NOT NULL,
+    `Endereco` VARCHAR(255) NOT NULL,
+    `End_Numero` VARCHAR(255) DEFAULT NULL,
+    `Bairro` VARCHAR(255) NOT NULL,
+    `Cidade` VARCHAR(255) NOT NULL,
+    `Estado` CHAR(2) NOT NULL,
+    `Valor_Min_Parcelas` DECIMAL(10,2) NOT NULL,
+    `Quant_Max_Parcelas` INT NOT NULL,
+    `Data_Alteracao` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB;
+/* drop table CONFIGURACOES; */
+/* select * from CONFIGURACOES; */
 
 -- -----------------------------------------------------
 -- Table `CLIENTES`
@@ -95,7 +118,7 @@ CREATE TABLE IF NOT EXISTS `FUNCIONARIOS` (
     `Status` ENUM('Ativo', 'Inativo') DEFAULT 'Ativo',
     `OBS` TEXT DEFAULT NULL,
     `Data_Cadastro` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `Data_Alteracao` DATETIME DEFAULT NULL,
+    `Data_Alteracao` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`ID_Cargo`) REFERENCES `CARGOS_FUNCIONARIOS` (`ID_Cargo`)
 ) ENGINE = InnoDB;
 /* drop table FUNCIONARIOS; */
@@ -156,7 +179,9 @@ CREATE TABLE IF NOT EXISTS `CATEGORIAS` (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `UNIDADES` (
     `ID_Unidade` INT AUTO_INCREMENT PRIMARY KEY,
-    `Unidade` VARCHAR(255) NOT NULL
+    `Unidade` VARCHAR(255) NOT NULL,
+    `Abreviacao` VARCHAR(10) DEFAULT NULL,
+    `Tipo` VARCHAR(20) DEFAULT NULL
 ) ENGINE = InnoDB;
 /* drop table UNIDADES; */
 /* select * from UNIDADES; */
@@ -168,12 +193,12 @@ CREATE TABLE IF NOT EXISTS `PRODUTOS` (
     `ID_Produto` INT AUTO_INCREMENT PRIMARY KEY,
     `ID_Categoria` INT NOT NULL,
     `Nome` VARCHAR(255) NOT NULL,
-    `Med` BOOLEAN,
-    `Marca` VARCHAR(255) NOT NULL,
+    `ID_Fornecedor` INT DEFAULT NULL,
     `Descricao` VARCHAR(255) DEFAULT NULL,
     `ID_Unidade` INT NOT NULL,
     `Quant_Minima` INT DEFAULT 10, 
     `Status` ENUM('Ativo', 'Inativo') DEFAULT 'Ativo',
+    `OBS` VARCHAR(255) DEFAULT NULL,
     `NCM` CHAR(8) NOT NULL,
     `EAN_GTIN` VARCHAR(14) DEFAULT NULL, -- Código de Barras
     `CBENEF` VARCHAR(20) DEFAULT NULL,
@@ -184,7 +209,8 @@ CREATE TABLE IF NOT EXISTS `PRODUTOS` (
     `NFCI` VARCHAR(20) DEFAULT NULL,
     `Foto` VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (`ID_Categoria`) REFERENCES `CATEGORIAS` (`ID_Categoria`),
-    FOREIGN KEY (`ID_Unidade`) REFERENCES `UNIDADES` (`ID_Unidade`)
+    FOREIGN KEY (`ID_Unidade`) REFERENCES `UNIDADES` (`ID_Unidade`),
+    FOREIGN KEY (`ID_Fornecedor`) REFERENCES `FORNECEDORES` (`ID_Fornecedor`)
 ) ENGINE = InnoDB;
 /* drop table PRODUTOS; */
 /* select * from PRODUTOS; */
@@ -194,13 +220,11 @@ CREATE TABLE IF NOT EXISTS `PRODUTOS` (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `LOTES` (
     `ID_Lote` INT AUTO_INCREMENT PRIMARY KEY,
+    `Nome_Lote` VARCHAR(255) NOT NULL,
     `ID_Produto` INT NOT NULL,
-    `ID_Fornecedor` INT NOT NULL,
-    `Quantidade` INT NOT NULL,
+    `Preco_Unitario` DECIMAL(10,2) NOT NULL,
     `Data_Validade` DATE NOT NULL,
-    `Data_Entrada` DATE NOT NULL,
-    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
-    FOREIGN KEY (`ID_Fornecedor`) REFERENCES `FORNECEDORES` (`ID_Fornecedor`)
+    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`)
 ) ENGINE = InnoDB;
 /* drop table LOTES; */
 /* select * from LOTES; */
@@ -209,12 +233,21 @@ CREATE TABLE IF NOT EXISTS `LOTES` (
 -- Table `CATEGORIAS_MEDICAMENTOS`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `CATEGORIAS_MEDICAMENTOS` (
-    `ID_Categoria_Med` INT AUTO_INCREMENT PRIMARY KEY,
-    `Categoria` VARCHAR(255) NOT NULL,
-    `Descricao` VARCHAR(255) DEFAULT NULL
+    `ID_CategoriaMed` INT AUTO_INCREMENT PRIMARY KEY,
+    `Categoria_Med` VARCHAR(255) NOT NULL
 ) ENGINE = InnoDB;
 /* drop table CATEGORIAS_MEDICAMENTOS; */
 /* select * from CATEGORIAS_MEDICAMENTOS; */
+
+-- -----------------------------------------------------
+-- Table `TARJAS_MEDICAMENTOS`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `TARJAS_MEDICAMENTOS` (
+    `ID_Tarja` INT AUTO_INCREMENT PRIMARY KEY,
+    `Tarja` VARCHAR(255) NOT NULL
+) ENGINE = InnoDB;
+/* drop table TARJAS_MEDICAMENTOS; */
+/* select * from TARJAS_MEDICAMENTOS; */
 
 -- -----------------------------------------------------
 -- Table `MEDICAMENTOS`
@@ -222,11 +255,13 @@ CREATE TABLE IF NOT EXISTS `CATEGORIAS_MEDICAMENTOS` (
 CREATE TABLE IF NOT EXISTS `MEDICAMENTOS` (
     `ID_Medicamento` INT AUTO_INCREMENT PRIMARY KEY,
     `ID_Produto` INT NOT NULL,
-    `ID_Categoria_Med` INT NOT NULL,
+    `ID_CategoriaMed` INT NOT NULL,
+    `ID_Tarja` INT NOT NULL,
+    `Tipo` ENUM('Genérico', 'Similar', 'Referência') NOT NULL,
     `Prin_Ativo` VARCHAR(255) DEFAULT NULL,
-    `OBS` VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`) ON DELETE CASCADE,
-    FOREIGN KEY (`ID_Categoria_Med`) REFERENCES `CATEGORIAS_MEDICAMENTOS` (`ID_Categoria_Med`)
+    FOREIGN KEY (`ID_Tarja`) REFERENCES `TARJAS_MEDICAMENTOS` (`ID_Tarja`),
+    FOREIGN KEY (`ID_CategoriaMed`) REFERENCES `CATEGORIAS_MEDICAMENTOS` (`ID_CategoriaMed`)
 ) ENGINE = InnoDB;
 /* drop table MEDICAMENTOS; */
 /* select * from MEDICAMENTOS; */
@@ -236,66 +271,64 @@ CREATE TABLE IF NOT EXISTS `MEDICAMENTOS` (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `ESTOQUE` (
     `ID_Estoque` INT AUTO_INCREMENT PRIMARY KEY,
-    `ID_Produto` INT NOT NULL,
+    `ID_Produto` INT NOT NULL, -- tirar futuramente
+    `ID_Lote` INT NOT NULL,
     `Quantidade` INT NOT NULL,
+    `Preco_Atual` DECIMAL(10,2) NOT NULL,
+    `Data_Entrada` DATE NOT NULL,
     `Data_Atualizacao` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`)
+    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
+    FOREIGN KEY (`ID_Lote`) REFERENCES `LOTES` (`ID_Lote`)
 ) ENGINE = InnoDB;
 /* drop table ESTOQUE; */
 /* select * from ESTOQUE; */
 
 -- -----------------------------------------------------
--- Table `MOVIMENTACAO_ESTOQUE`
+-- Table `TURNOS`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `MOVIMENTACAO_ESTOQUE` (
-    `ID_Movimentacao` INT AUTO_INCREMENT PRIMARY KEY,
-    `ID_Produto` INT NOT NULL,
-    `ID_Funcionario` INT NOT NULL,
-    `Tipo` ENUM('Entrada', 'Saída') NOT NULL,
-    `Quantidade` INT NOT NULL,
-    `ID_Lote` INT NOT NULL,
-    `Data_Movimentacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
-    FOREIGN KEY (`ID_Lote`) REFERENCES `LOTES` (`ID_Lote`),
-    FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`)
+CREATE TABLE IF NOT EXISTS `TURNOS` (
+    `ID_Turno` INT AUTO_INCREMENT PRIMARY KEY,
+    `Turno` VARCHAR(255) NOT NULL
 ) ENGINE = InnoDB;
-/* drop table MOVIMENTACAO_ESTOQUE; */
-/* select * from MOVIMENTACAO_ESTOQUE; */
-
--- -----------------------------------------------------
--- Table `CAIXAS_REGISTRADOS`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `CAIXAS_REGISTRADOS` (
-    `ID_CaixaRegistrado` INT AUTO_INCREMENT PRIMARY KEY,
-    `Nome_Caixa` VARCHAR(255) NOT NULL
-) ENGINE = InnoDB;
-/* drop table CAIXAS_REGISTRADOS; */
-/* select * from CAIXAS_REGISTRADOS; */
+/* drop table TURNOS; */
+/* select * from TURNOS; */
 
 -- -----------------------------------------------------
 -- Table `CAIXAS`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `CAIXAS` (
     `ID_Caixa` INT AUTO_INCREMENT PRIMARY KEY,
-    `ID_CaixaRegistrado` INT NOT NULL,
-    `ID_Funcionario` INT NOT NULL,
-    `Data_Abertura` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `Saldo_Inicial` DECIMAL(10,2) NOT NULL DEFAULT 0.00, 
-    `Data_Fechamento` DATETIME DEFAULT NULL,
-    `Saldo_Final` DECIMAL(10,2) DEFAULT NULL,
-    `Valor_Vendido` DECIMAL(10,2) DEFAULT NULL,
-    `Status` ENUM('Aberto', 'Fechado') NOT NULL DEFAULT 'Aberto',
-    FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`),
-    FOREIGN KEY (`ID_CaixaRegistrado`) REFERENCES `CAIXAS_REGISTRADOS` (`ID_CaixaRegistrado`)
+    `Caixa` VARCHAR(255) NOT NULL,
+    `Status` ENUM('Aberto', 'Fechado') NOT NULL DEFAULT 'Fechado'
 ) ENGINE = InnoDB;
 /* drop table CAIXAS; */
 /* select * from CAIXAS; */
 
 -- -----------------------------------------------------
+-- Table `CAIXAS_ABERTOS`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `CAIXAS_ABERTOS` (
+    `ID_CaixaAberto` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_Caixa` INT NOT NULL,
+    `ID_Funcionario` INT NOT NULL,
+    `ID_Turno` INT NOT NULL,
+    `Data_Abertura` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `Saldo_Inicial` DECIMAL(10,2) NOT NULL DEFAULT 0.00, 
+    `Data_Fechamento` DATETIME DEFAULT NULL,
+    `Saldo_Final` DECIMAL(10,2) DEFAULT NULL,
+    `Valor_Vendido` DECIMAL(10,2) DEFAULT NULL,
+    FOREIGN KEY (`ID_Caixa`) REFERENCES `CAIXAS` (`ID_Caixa`),
+    FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`),
+    FOREIGN KEY (`ID_Turno`) REFERENCES `TURNOS` (`ID_Turno`)
+) ENGINE = InnoDB;
+/* drop table CAIXAS_ABERTOS; */
+/* select * from CAIXAS_ABERTOS; */
+
+-- -----------------------------------------------------
 -- Table `MOVIMENTACOES_CAIXA`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `MOVIMENTACOES_CAIXA` (
-    `ID_Movimentacao` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_MovimentacaoCaixa` INT AUTO_INCREMENT PRIMARY KEY,
     `ID_Caixa` INT NOT NULL,
     `ID_Funcionario` INT NOT NULL, 
     `Tipo` ENUM('Entrada', 'Saída') NOT NULL, 
@@ -323,33 +356,56 @@ CREATE TABLE IF NOT EXISTS `FORMAS_PAGAMENTO` (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `VENDAS` (
     `ID_Venda` INT AUTO_INCREMENT PRIMARY KEY,
-    `ID_Cliente` INT NOT NULL,
     `ID_Funcionario` INT NOT NULL,
-    `ID_Caixa` INT NOT NULL,
+    `ID_CaixaAberto` INT NOT NULL,
+    `ID_Cliente` INT DEFAULT NULL,
     `DataHora_Venda` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `Valor_Total` DECIMAL(10,2) NOT NULL,
     `Desconto` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    FOREIGN KEY (`ID_Cliente`) REFERENCES `CLIENTES` (`ID_Cliente`),
     FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`),
-    FOREIGN KEY (`ID_Caixa`) REFERENCES `CAIXAS` (`ID_Caixa`)
+    FOREIGN KEY (`ID_CaixaAberto`) REFERENCES `CAIXAS_ABERTOS` (`ID_CaixaAberto`),
+    FOREIGN KEY (`ID_Cliente`) REFERENCES `CLIENTES` (`ID_Cliente`)
 ) ENGINE = InnoDB;
 /* drop table VENDAS; */
-/* select * from VENDAS; */
+select * from VENDAS; 
 
 -- -----------------------------------------------------
--- Table `PAGAMENTOS`
+-- Table `MOVIMENTACAO_ESTOQUE`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `PAGAMENTOS` (
-    `ID_Pagamento` INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS `MOVIMENTACAO_ESTOQUE` (
+    `ID_MovimentacaoEstoque` INT AUTO_INCREMENT PRIMARY KEY,
+    `ID_Estoque` INT NOT NULL,
+    `ID_Produto` INT NOT NULL,
+    `ID_Funcionario` INT NOT NULL,
+    `Tipo` ENUM('Entrada', 'Saída') NOT NULL,
+    `Quantidade` INT NOT NULL,
+    `ID_Venda` INT DEFAULT NULL,
+    `Data_Movimentacao` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `OBS` VARCHAR(255) DEFAULT NULL,
+    FOREIGN KEY (`ID_Estoque`) REFERENCES `ESTOQUE` (`ID_Estoque`),
+    FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`),
+    FOREIGN KEY (`ID_Venda`) REFERENCES `VENDAS` (`ID_Venda`),
+    FOREIGN KEY (`ID_Funcionario`) REFERENCES `FUNCIONARIOS` (`ID_Funcionario`)
+) ENGINE = InnoDB;
+/* drop table MOVIMENTACAO_ESTOQUE; */
+/* select * from MOVIMENTACAO_ESTOQUE; */
+
+-- -----------------------------------------------------
+-- Table `VENDA_PAGAMENTOS`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `VENDA_PAGAMENTOS` (
+    `ID_VendaPagamento` INT AUTO_INCREMENT PRIMARY KEY,
     `ID_Venda` INT NOT NULL,
     `ID_Forma_Pag` INT NOT NULL,
     `Valor` DECIMAL(10,2) NOT NULL,
+    `Troco` DECIMAL(10,2) DEFAULT 0.00,
     `Quant_Vezes` INT NOT NULL DEFAULT 1,
+    `Data_Pagamento` DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`ID_Venda`) REFERENCES `VENDAS` (`ID_Venda`),
     FOREIGN KEY (`ID_Forma_Pag`) REFERENCES `FORMAS_PAGAMENTO` (`ID_Forma_Pag`)
 ) ENGINE = InnoDB;
-/* drop table PAGAMENTOS; */
-/* select * from PAGAMENTOS; */ 
+/* drop table VENDA_PAGAMENTOS; */
+ select * from VENDA_PAGAMENTOS; 
 
 -- -----------------------------------------------------
 -- Table `ITENS_VENDA`
@@ -359,7 +415,6 @@ CREATE TABLE IF NOT EXISTS `ITENS_VENDA` (
     `ID_Venda` INT NOT NULL,
     `ID_Produto` INT NOT NULL,
     `Quantidade` INT NOT NULL,
-    `Preco_Unitario` DECIMAL(10,2) NOT NULL,
     `Valor_Total` DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (`ID_Venda`) REFERENCES `VENDAS` (`ID_Venda`) ON DELETE CASCADE,
     FOREIGN KEY (`ID_Produto`) REFERENCES `PRODUTOS` (`ID_Produto`)

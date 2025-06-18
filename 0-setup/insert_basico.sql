@@ -1,3 +1,7 @@
+INSERT INTO CONFIGURACOES (Nome_RazaoSocial, Nome_Fantasia, Slogan, Documento, Loja, CEP, Endereco, End_Numero, Bairro, Cidade, Estado, Valor_Min_Parcelas, Quant_Max_Parcelas) VALUES
+('Farmácia LavenderPharma', 'LavenderPharma', 'Cuidando de Você!', 'XX.XXX.XXX/0001-99', '01', 
+'01000000', 'Rua das Flores', '123', 'Centro', 'São Paulo', 'SP', 120.00, 3);
+
 INSERT INTO CARGOS_FUNCIONARIOS (Cargo, Descricao)
 VALUES ('Administrador', 'Acesso irrestrito ao sistema.');
 
@@ -112,6 +116,11 @@ INSERT INTO LOTES (Nome_Lote, ID_Produto, Preco_Unitario, Data_Validade) VALUES
 INSERT INTO ESTOQUE (ID_Produto, ID_Lote, Quantidade, Preco_Atual, Data_Entrada, Data_Atualizacao) VALUES
 (1, 1, 100, 4.50, NOW(), NOW()),
 (2, 2, 50, 22.90, NOW(), NOW());
+
+INSERT INTO TURNOS (Turno) VALUES
+('Manhã'),
+('Tarde'),
+('Noite');
 
 INSERT INTO CAIXAS (Caixa) VALUES
 ('Caixa01'),
