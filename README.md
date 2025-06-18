@@ -1,6 +1,6 @@
-# Sistema de Gerenciamento para Farmácia - LavanderPharma
+# Sistema de Gerenciamento para Farmácia
 
-Este projeto é o Trabalho de Conclusão de Curso (TCC) desenvolvido como requisito parcial para a conclusão da graduação. O sistema tem como objetivo facilitar a gestão de farmácias por meio de funcionalidades que abrangem diversos setores, como estoque, cadastro de funcionários, pedidos, clientes, fornecedores e controle financeiro.
+Este projeto é o Trabalho de Conclusão de Curso desenvolvido como requisito parcial para a conclusão da graduação. O sistema tem como objetivo facilitar a gestão de farmácias por meio de funcionalidades que abrangem diversos setores, como estoque, cadastro de funcionários, pedidos, clientes, fornecedores e controle financeiro.
 
 ## 📋 Funcionalidades
 
